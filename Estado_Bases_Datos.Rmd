@@ -39,5 +39,7 @@ knitr:
     dpi: 300        # Numero de pixeles en resolucion para graficos
     error: FALSE    # No interfiere la salida y genera errores
     collapse: TRUE  # Organiza y limpia el formato de salida
+    
+    # Credencial de Acceso: 
 ---
 
