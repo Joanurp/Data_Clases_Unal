@@ -1,0 +1,233 @@
+---
+title: \textbf{Visualización Espacial de datos}
+subtitle: Estadística Espacial
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    toc: no               # Indice de paginas
+    #number_sections: no  # Innecesario 
+    highlight: arrow      # Theme de sintaxis
+    includes:
+      in_header:
+        - Config.txt     # Configuracion de pie, encabezado y usepackge
+      #before_body: before_body.tex (Preambulo)
+      #after_body: after_body.tex (Preambulo)
+        
+  params:
+    lang: es
+    csl: "apa.csl"
+    geometry: "margin=1in"
+    fontsize: 11pt
+    mainfont: "Times New Roman"
+
+---
+
+
+```{r setup, include=FALSE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  highlight = TRUE,
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  tidy = FALSE,
+  eval = TRUE,
+  fig.cap = "",
+  echo = TRUE,
+  include = TRUE,
+  cache = FALSE,
+  dpi = 300,
+  error = FALSE,
+  collapse = TRUE
+)
+
+```
+
+
+```{r}
+library(sp)
+library(spData)
+library(spdep)
+library(gstat)
+library(ggplot2)
+library(raster)
+
+# paquete spData
+library(spData)
+
+#los conjuntos de datos disponibles en spData
+data(package = "spData")
+
+#conjunto de datos nc.sids, que contiene datos de 
+#SIDS (Síndrome de Muerte Súbita del Lactante) 
+#en Carolina del Norte, para realizar un análisis 
+#exploratorio geoestadístico.
+
+# Cargar los datos de SIDS en Carolina del Norte
+data("nc.sids")
+
+
+# primeras filas de los datos
+head(nc.sids)
+
+# Visualización
+plot(nc.sids)
+
+# Paso 1: Visualización espacial
+# mapa de dispersión de las tasas de SIDS en Carolina del Norte
+ggplot(nc.sids, aes(x = lon, y = lat, size = SID74, fill = SID74)) +
+  geom_point(shape = 21, color = "black") +
+  scale_size_continuous(range = c(3, 10), guide = FALSE) +
+  scale_fill_gradient(low = "#F1EEF6", high = "#54278F", name = "Tasa de SIDS",
+                      breaks = seq(0, 10, by = 2), labels = c("0", "2", "4", "6", "8", "10"),
+                      guide = guide_colorbar(barheight = unit(5, "cm"), label.position = "right")) +
+  labs(title = "Tasas de SIDS en Carolina del Norte (1974-1978)",
+       subtitle = "Tasa de SIDS por condado",
+       caption = "Fuente: nc.sids dataset") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10, color = "gray50"),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "right",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
+
+#mapa de contornos de las tasas de SIDS en Carolina del Norte con etiquetas de condado
+ggplot(nc.sids, aes(x = lon, y = lat, z = SID74, label = rownames(nc.sids))) +
+  geom_contour(color = "black") +
+  geom_text(color = "black", size = 3, nudge_y = 0.1) +
+  scale_fill_gradient(low = "#F1EEF6", high = "#54278F", name = "Tasa de SIDS",
+                      breaks = seq(0, 10, by = 2), labels = c("0", "2", "4", "6", "8", "10"),
+                      guide = guide_colorbar(barheight = unit(5, "cm"), label.position = "right")) +
+  labs(title = "Tasas de SIDS en Carolina del Norte (1974-1978)",
+       subtitle = "Tasa de SIDS por condado",
+       caption = "Fuente: nc.sids dataset") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10, color = "gray50"),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "right",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
+
+
+library(dplyr)
+
+# Colores a cada condado
+colors <- nc.sids$SID74 %>%
+  cut(breaks = seq(0, 10, by = 2), include.lowest = TRUE) %>%
+  as.numeric()
+
+# Mapa de colores de las tasas de SIDS en Carolina del Norte con etiquetas de condado
+ggplot(nc.sids, aes(x = lon, y = lat, fill = SID74, label = rownames(nc.sids))) +
+  geom_tile(color = "black") +
+  geom_text(aes(color = factor(SID74)), size = 3, nudge_y = 0.1) +
+  scale_fill_gradient(low = "#F1EEF6", high = "#54278F", name = "Tasa de SIDS",
+                      breaks = seq(0, 10, by = 2), labels = c("0", "2", "4", "6", "8", "10"),
+                      guide = guide_colorbar(barheight = unit(5, "cm"), label.position = "right")) +
+  scale_color_manual(values = colors) +
+  labs(title = "Tasas de SIDS en Carolina del Norte (1974-1978)",
+       subtitle = "Tasa de SIDS por condado",
+       caption = "Fuente: nc.sids dataset") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10, color = "gray50"),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "right",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10))
+
+# Paso 2: Análisis de tendencias
+correlation <- cor(nc.sids)
+correlation
+summary(nc.sids)
+
+# Ajustar el modelo de regresión lineal
+tendencia <- lm(SID74 ~ BIR74, data = nc.sids)
+
+# Resumen del modelo
+summary(tendencia)
+
+# Gráfico de dispersión de las tasas de SIDS con la línea de tendencia temporal
+ggplot(nc.sids, aes(x = BIR74, y = SID74)) +
+  geom_point() +  # Puntos de datos originales
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "blue") +  # Línea de tendencia
+  labs(title = "Tendencia temporal de las tasas de SIDS",
+       x = "Nacimientos en 1974",
+       y = "Tasa de SIDS en 1974",
+       caption = "Fuente: nc.sids dataset") +
+  theme_minimal()
+
+# Paso 3: Interpolación
+
+```
+
+
+
+
+```{r}
+## ejemplo 2 
+
+data(meuse)
+coordinates(meuse) = ~x+y
+# let's do some manual fitting of two direct variograms and a cross variogram
+g <- gstat(id = "ln.zinc", formula = log(zinc)~1, data = meuse)
+g <- gstat(g, id = "ln.lead", formula = log(lead)~1, data = meuse)
+# examine variograms and cross variogram:
+plot(variogram(g))
+# enter direct variograms:
+g <- gstat(g, id = "ln.zinc", model = vgm(.55, "Sph", 900, .05))
+g <- gstat(g, id = "ln.lead", model = vgm(.55, "Sph", 900, .05))
+# enter cross variogram:
+g <- gstat(g, id = c("ln.zinc", "ln.lead"), model = vgm(.47, "Sph", 900, .03))
+# examine fit:
+plot(variogram(g), model = g$model, main = "models fitted by eye")
+# see also demo(cokriging) for a more efficient approach
+g["ln.zinc"]
+g["ln.lead"]
+g[c("ln.zinc", "ln.lead")]
+g[1]
+g[2]
+
+# Inverse distance interpolation with inverse distance power set to .5:
+# (kriging variants need a variogram model to be specified)
+data(meuse.grid)
+gridded(meuse.grid) = ~x+y
+meuse.gstat <- gstat(id = "zinc", formula = zinc ~ 1, data = meuse, 
+                     nmax = 7, set = list(idp = .5))
+meuse.gstat
+z <- predict(meuse.gstat, meuse.grid)
+spplot(z["zinc.pred"])
+# see demo(cokriging) and demo(examples) for further examples, 
+# and the manuals for predict and image
+
+# local universal kriging
+gmeuse <- gstat(id = "log_zinc", formula = log(zinc)~sqrt(dist), data = meuse)
+# variogram of residuals
+vmeuse.res <- fit.variogram(variogram(gmeuse), vgm(1, "Exp", 300, 1))
+# prediction from local neighbourhoods within radius of 170 m or at least 10 points
+gmeuse <- gstat(id = "log_zinc", formula = log(zinc)~sqrt(dist),
+                data = meuse, maxdist=170, nmin=10, force=TRUE, model=vmeuse.res)
+predmeuse <- predict(gmeuse, meuse.grid)
+spplot(predmeuse)
+
+```
+
+
+
+

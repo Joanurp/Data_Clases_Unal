@@ -1,0 +1,50 @@
+---
+title: \textbf{Estado del Arte sobre los Sistemas de Gestión de Bases de Datos}
+subtitle: Asignatura Bases De Datos
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    toc: no               # Indice de paginas
+    #number_sections: no  # Innecesario 
+    highlight: arrow      # Theme de sintaxis
+    includes:
+      in_header:
+        - Config.txt     # Configuracion de pie, encabezado y usepackge
+      #before_body: before_body.tex (Preambulo)
+      #after_body: after_body.tex (Preambulo)
+        
+  params:
+    lang: es
+    csl: "apa.csl"
+    geometry: "margin=1in"
+    fontsize: 11pt
+    mainfont: "Times New Roman"
+    
+        
+knitr:
+  opts_chunk:
+    comment: ""          # Comentarios de salida para el chunk
+    highlight: TRUE      # Sintaxis de Salida para el chunk
+    fig.align: "center"  # Alinea los chunk al centro
+    message: FALSE  # Evita mensajes de errores
+    warning: FALSE  # Evita advertencias
+    tidy: FALSE     # controla si el código en un chunk debe ser limpiado o reformateado
+    eval: TRUE      # controla si el código en un chunk debe ser ejecutado o no al generar
+    fig.cap: ""     # Leyenda grafica
+    echo: TRUE      # controla si el código del chunk debe ser mostrado en el documento
+    include: TRUE   # Incluye el codigo y sus resultados 
+    cache: FALSE    # Formatea la memoria
+    dpi: 300        # Numero de pixeles en resolucion para graficos
+    error: FALSE    # No interfiere la salida y genera errores
+    collapse: TRUE  # Organiza y limpia el formato de salida
+    
+    # Credencial de Acceso: 
+    # git config --global user.name "Mi Nombre"
+    # git config --global user.email jurquijop@unal.edu.co
+---
+
+
+
+

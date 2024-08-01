@@ -1,0 +1,158 @@
+---
+title: \textbf{Mapas a través de Library en R}
+subtitle: Estadística Espacial
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+        - Config.txt     # Configuracion de pie, encabezado y usepackge
+  
+---
+
+
+```{r setup, include=FALSE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+
+Los datos proporcionados contienen información sobre nacimientos y muertes por Síndrome de Muerte Súbita del Lactante (SID) en varios condados de Carolina del Norte durante los periodos 1974-78 y 1979-84. A continuación se describen las variables del conjunto de datos:
+
+- CNTY.ID: ID del condado
+
+- BIR74: Nacimientos en 1974-78
+
+- SID74: Muertes por SID en 1974-78
+
+- NWBIR74: Nacimientos no blancos en 1974-78
+
+- BIR79: Nacimientos en 1979-84
+
+- SID79: Muertes por SID en 1979-84
+
+- NWBIR79: Nacimientos no blancos en 1979-84
+
+- east: Coordenadas este del asiento del condado en millas, proyección local
+
+- north: Coordenadas norte del asiento del condado en millas, proyección local
+
+- lon: Longitud del asiento del condado
+
+- lat: Latitud del asiento del condado
+
+- L.id: Índice L de Cressie y Read (1985)
+
+- M.id: Índice M de Cressie y Read (1985)
+
+
+```{r}
+
+if (!require(spData)) {
+  install.packages("spData")
+}
+
+library(spData)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+
+data("nc.sids")
+
+```
+
+
+```{r}
+print(summary(nc.sids))
+
+```
+```{r}
+# Estadísticas descriptivas
+mean_rate <- mean(nc.sids$SID79, na.rm = TRUE)
+median_rate <- median(nc.sids$SID79, na.rm = TRUE)
+sd_rate <- sd(nc.sids$SID79, na.rm = TRUE)
+
+cat("Tasa media de mortalidad infantil:",
+    mean_rate, ". Mediana:", median_rate, "Desviacion estandar:", sd_rate, ".")
+
+```
+```{r}
+
+ggplot(nc.sids, aes(x = SID79)) +
+  geom_histogram(aes(y = ..density..), binwidth = 5, fill = "blue", color = "black", alpha = 0.5) +
+  geom_density(color = "red", size = 1) +
+  labs(title = "Distribución de la tasa de mortalidad infantil",
+       x = "Tasa de Mortalidad Infantil",
+       y = "Densidad") +
+  theme_minimal()
+
+```
+
+```{r}
+
+ggplot(nc.sids, aes(x = SID79 , y = BIR79)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_smooth(method = "lm", color = "red", size = 1) +
+  labs(title = "Relacion entre la Tasa de Mortalidad Infantil y la Tasa de Natalidad",
+       x = "Tasa de Natalidad",
+       y = "Tasa de Mortalidad Infantil") +
+  theme_minimal()
+
+```
+
+```{r}
+library(sf)
+library(tigris)
+library(ggplot2)
+library(viridis)
+
+# Cargar el mapa de los condados de Carolina del Norte
+counties <- counties(state = "NC", cb = TRUE)
+
+# Asegúrate de que el CRS de los condados sea EPSG:4326
+counties <- st_transform(counties, crs = 4269)
+
+# Convertir los datos a formato espacial utilizando las columnas 'lon' y 'lat'
+nc.sids_sf <- st_as_sf(nc.sids, coords = c("lon", "lat"), crs = 4269)
+
+# Unir los datos espaciales con el mapa de los condados
+nc_map <- st_join(counties, nc.sids_sf)
+
+# Crear el mapa
+ggplot(data = nc_map) +
+  geom_sf(aes(fill = SID79), color = "white", size = 0.2) +
+  scale_fill_viridis_c(option = "C", na.value = "grey90") +
+  labs(
+    title = "Mortalidad Infantil en Carolina del Norte",
+    fill = "Tasa de Mortalidad Infantil",
+    caption = "Fuente: SpData"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    plot.caption = element_text(size = 10, hjust = 0.5),
+    legend.position = "right",
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10),
+    panel.grid = element_blank(),
+    axis.text = element_blank(),
+    axis.title = element_blank()
+  ) +
+  coord_sf(expand = FALSE)
+
+
+```
+
+
+
