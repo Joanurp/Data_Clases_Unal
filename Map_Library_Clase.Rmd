@@ -27,6 +27,7 @@ knitr::opts_chunk$set(
 
 ```
 
+## información sobre nacimientos y muertes por Síndrome de Muerte Súbita del Lactante
 
 Los datos proporcionados contienen información sobre nacimientos y muertes por Síndrome de Muerte Súbita del Lactante (SID) en varios condados de Carolina del Norte durante los periodos 1974-78 y 1979-84. A continuación se describen las variables del conjunto de datos:
 
@@ -77,6 +78,8 @@ data("nc.sids")
 print(summary(nc.sids))
 
 ```
+
+
 ```{r}
 # Estadísticas descriptivas
 mean_rate <- mean(nc.sids$SID79, na.rm = TRUE)
@@ -87,10 +90,13 @@ cat("Tasa media de mortalidad infantil:",
     mean_rate, ". Mediana:", median_rate, "Desviacion estandar:", sd_rate, ".")
 
 ```
+
+
 ```{r}
 
 ggplot(nc.sids, aes(x = SID79)) +
-  geom_histogram(aes(y = ..density..), binwidth = 5, fill = "blue", color = "black", alpha = 0.5) +
+  geom_histogram(aes(y = ..density..), binwidth = 5, fill = "blue",
+                 color = "black", alpha = 0.5) +
   geom_density(color = "red", size = 1) +
   labs(title = "Distribución de la tasa de mortalidad infantil",
        x = "Tasa de Mortalidad Infantil",
@@ -111,6 +117,7 @@ ggplot(nc.sids, aes(x = SID79 , y = BIR79)) +
 
 ```
 
+
 ```{r}
 library(sf)
 library(tigris)
@@ -128,6 +135,10 @@ nc.sids_sf <- st_as_sf(nc.sids, coords = c("lon", "lat"), crs = 4269)
 
 # Unir los datos espaciales con el mapa de los condados
 nc_map <- st_join(counties, nc.sids_sf)
+
+# Filtrar los condados con mortalidad infantil por encima de 50
+high_mortality <- nc_map %>% filter(SID79 > 30)
+
 
 # Crear el mapa
 ggplot(data = nc_map) +
@@ -149,7 +160,117 @@ ggplot(data = nc_map) +
     axis.text = element_blank(),
     axis.title = element_blank()
   ) +
-  coord_sf(expand = FALSE)
+  coord_sf(expand = FALSE) +
+  geom_sf_text(data = high_mortality, aes(label = NAME), size = 3, color = "black", check_overlap = TRUE)
+
+```
+
+
+
+## Datos del mapa mundial de Natural Earth con algunas variables del Banco Mundial.
+
+ los datos contienen un `data.frame` con 177 observaciones de 11 variables:
+
+- **iso_a2:** vector de caracteres con códigos de país ISO de 2 caracteres
+
+- **name_long:** vector de caracteres con nombres de países
+
+- **continent:** vector de caracteres con nombres de continentes
+
+- **region_un:** vector de caracteres con nombres de regiones
+
+- **subregion:** vector de caracteres con nombres de subregiones
+
+- **type:** vector de caracteres con nombres de tipos
+
+- **area_km2:** vector de enteros con valores de área
+
+- **pop:** vector de enteros con población en 2014
+
+- **lifeExp:** vector de enteros con esperanza de vida al nacer en 2014
+
+- **gdpPercap:** vector de enteros con PIB per cápita en 2014
+
+- **geom:** `sfc_MULTIPOLYGON`
+
+
+```{r}
+
+library(spData)
+data("world")
+
+print(summary(world))
+
+```
+
+
+```{r}
+# Estadísticas descriptivas
+mean_rate <- mean(world$gdpPercap, na.rm = TRUE)
+median_rate <- median(world$gdpPercap, na.rm = TRUE)
+sd_rate <- sd(world$gdpPercap, na.rm = TRUE)
+
+cat("Tasa media del PBI:",
+    mean_rate, "  Mediana:", median_rate, "  Desviacion estandar:", sd_rate)
+
+```
+
+```{r}
+
+ggplot(world, aes(x = lifeExp)) +
+  geom_histogram(aes(y = ..density..), binwidth = 5, fill = "green",
+                 color = "black", alpha = 0.5) + 
+  geom_density(color = "purple", size = 1) + 
+  labs(title = "Distribución de la Expectativa de Vida",
+       x = "Expectativa de Vida",
+       y = "Densidad") +  
+  theme_minimal()
+
+```
+
+
+```{r}
+
+# Ajustar el modelo lineal con la transformación logarítmica del PIB per cápita
+word1 <- lm(log(gdpPercap) ~ lifeExp, data = world)
+
+# Mostrar el resumen del modelo ajustado
+summary(word1)
+
+# Crear el gráfico
+ggplot(world, aes(x = gdpPercap, y = lifeExp)) +
+  geom_point(alpha = 0.5, color = "blue") +  # Puntos de datos
+  geom_smooth(method = "lm", formula = y ~ x, color = "purple", size = 1) +  # Línea de ajuste
+  scale_x_log10(labels = scales::comma) +  # Aplicar escala logarítmica al eje x
+  labs(title = "Relación entre el Producto Percápita y la Expectativa de Vida",
+       x = "Producto Percápita",
+       y = "Expectativa de Vida") +
+  theme_minimal()
+
+```
+
+
+```{r}
+library(sf)
+library(ggplot2)
+library(viridis)
+library(dplyr)
+
+# Filtrar los países con un PIB per cápita mayor a 20,000
+world <- world %>% mutate(top_gdpPercap = if_else(gdpPercap > 20000, name_long, NA_character_))
+
+# Crear el mapa
+ggplot(data = world) +
+  geom_sf(aes(fill = gdpPercap), color = NA) +
+  scale_fill_viridis_c(option = "C", name = "PIB per cápita") +
+  geom_sf_text(aes(label = top_gdpPercap), 
+               size = 3, color = "black", check_overlap = TRUE) +
+  theme_minimal() +
+  labs(
+    title = "Mapa Mundial del PIB per cápita en 2014",
+    subtitle = "Datos del Banco Mundial",
+    caption = "Fuente: Natural Earth y Banco Mundial"
+  )
 
 
 ```
