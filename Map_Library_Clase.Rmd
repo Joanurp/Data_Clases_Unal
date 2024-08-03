@@ -105,6 +105,9 @@ ggplot(nc.sids, aes(x = SID79)) +
 
 ```
 
+De acuerdo a la distribución de la tasa de mortalidad infantil, existen condados que resaltan mayormente este indice de mortalidad en carolina del norte, caso que entre a profundizar más adelante al identificar cuales condados estan presentando este un indice de mortalidad por encima de 40.
+
+
 ```{r}
 
 ggplot(nc.sids, aes(x = SID79 , y = BIR79)) +
@@ -116,7 +119,7 @@ ggplot(nc.sids, aes(x = SID79 , y = BIR79)) +
   theme_minimal()
 
 ```
-
+Para este caso la distribución espacial de los datos muestra relación positiva entre la tasa de mortalidad y la de natalidad en los condados de carolina del norte.
 
 ```{r}
 library(sf)
@@ -164,7 +167,7 @@ ggplot(data = nc_map) +
   geom_sf_text(data = high_mortality, aes(label = NAME), size = 3, color = "black", check_overlap = TRUE)
 
 ```
-
+Los condados que presentan mayor tasa de mortalidad infantil son cumberland, meckenlenburg, Guilford y wake por encima de 30000
 
 
 ## Datos del mapa mundial de Natural Earth con algunas variables del Banco Mundial.
@@ -231,7 +234,7 @@ ggplot(world, aes(x = lifeExp)) +
 
 ```{r}
 
-# Ajustar el modelo lineal con la transformación logarítmica del PIB per cápita
+# Modelo lineal con la transformación logarítmica del PIB per cápita
 word1 <- lm(log(gdpPercap) ~ lifeExp, data = world)
 
 # Mostrar el resumen del modelo ajustado
@@ -248,6 +251,8 @@ ggplot(world, aes(x = gdpPercap, y = lifeExp)) +
   theme_minimal()
 
 ```
+
+Dado que inicialmente el producto percapita y la expectativa de vida no poseian una relación lineal, a traves de la transformación logaritmica de un modelo lineal se logro reducir la variabilida de los mismo e identifcar la tendencia que existe entre ellos, y para ello se puede evidenciar una relación signifcativa para ambos, entre mayor aumenta el PBI la expectativa de vida aumento.
 
 
 ```{r}
