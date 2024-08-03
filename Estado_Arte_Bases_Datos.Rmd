@@ -3,7 +3,7 @@ title: \textbf{Estado del Arte sobre los Sistemas de Gestión de Bases de Datos}
 subtitle: Asignatura Bases De Datos
 author: "Jose Angel Urquijo Parra"
 date: \today
-
+  
 output:
   pdf_document:
     toc: no               # Indice de paginas
