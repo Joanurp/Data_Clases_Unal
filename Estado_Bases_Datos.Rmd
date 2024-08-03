@@ -40,9 +40,6 @@ knitr:
     error: FALSE    # No interfiere la salida y genera errores
     collapse: TRUE  # Organiza y limpia el formato de salida
     
-    # Credencial de Acceso: 
-    # git config --global user.name "Mi Nombre"
-    # git config --global user.email jurquijop@unal.edu.co
 ---
 
 
