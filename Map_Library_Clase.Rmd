@@ -167,6 +167,7 @@ ggplot(data = nc_map) +
   geom_sf_text(data = high_mortality, aes(label = NAME), size = 3, color = "black", check_overlap = TRUE)
 
 ```
+
 Los condados que presentan mayor tasa de mortalidad infantil son cumberland, meckenlenburg, Guilford y wake por encima de 30000
 
 
