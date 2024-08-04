@@ -1,5 +1,5 @@
 ---
-title: \textbf{Mapas a través de Library en R}
+title: \textbf{Mapas a través de Library Tmap en R}
 subtitle: Estadística Espacial
 author: "Jose Angel Urquijo Parra"
 date: \today
@@ -122,9 +122,12 @@ ggplot(nc.sids, aes(x = SID79 , y = BIR79)) +
 Para este caso la distribución espacial de los datos muestra relación positiva entre la tasa de mortalidad y la de natalidad en los condados de carolina del norte.
 
 ```{r}
+library(tmap)
 library(sf)
 library(tigris)
 library(ggplot2)
+library(dplyr)
+library(spData)
 library(viridis)
 
 # Cargar el mapa de los condados de Carolina del Norte
@@ -144,27 +147,25 @@ high_mortality <- nc_map %>% filter(SID79 > 30)
 
 
 # Crear el mapa
-ggplot(data = nc_map) +
-  geom_sf(aes(fill = SID79), color = "white", size = 0.2) +
-  scale_fill_viridis_c(option = "C", na.value = "grey90") +
-  labs(
-    title = "Mortalidad Infantil en Carolina del Norte",
-    fill = "Tasa de Mortalidad Infantil",
-    caption = "Fuente: SpData"
-  ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
-    plot.caption = element_text(size = 10, hjust = 0.5),
-    legend.position = "right",
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10),
-    panel.grid = element_blank(),
-    axis.text = element_blank(),
-    axis.title = element_blank()
-  ) +
-  coord_sf(expand = FALSE) +
-  geom_sf_text(data = high_mortality, aes(label = NAME), size = 3, color = "black", check_overlap = TRUE)
+tm_shape(nc_map) +
+  tm_polygons(col = "SID79", palette = viridis(5, direction = -1), title = "Mortalidad Infantil", 
+              style = "quantile", n = 5, 
+              textNA = "No disponible", colorNA = "grey90",
+              border.col = "black", border.alpha = 0.8) +
+  tm_borders(col = "black", lwd = 1) +
+  tm_layout(main.title = "Mortalidad Infantil en Carolina del Norte",
+            main.title.size = 1.5,
+            legend.title.size = 1.2,
+            legend.text.size = 0.8,
+            legend.position = c("right", "bottom"),
+            frame = FALSE,
+            inner.margins = c(0.2, 0.005, 0.2, 0.25),
+            fontfamily = "sans") +
+  tm_shape(high_mortality) +
+  tm_text("NAME", size = 0.3, col = "white", 
+          auto.placement = TRUE) +
+  tm_compass(type = "rose", position = c("right", "top")) +
+  tm_scale_bar(position = c("left", "bottom"))
 
 ```
 
@@ -280,6 +281,7 @@ ggplot(data = world) +
 
 
 ```
+
 
 
 
