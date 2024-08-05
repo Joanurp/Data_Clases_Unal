@@ -1,5 +1,8 @@
+
+
 library(RPostgres)
 library(DBI)
+
 
 # Crear la conexión utilizando RPostgres
 conexion <- dbConnect(RPostgres::Postgres(), dbname = "CTrabajo",
@@ -23,10 +26,10 @@ query <- "
   GROUP BY medal;
 "
 
-# Promedio
-query <- "SELECT AVG(medal) AS promedio_Base FROM \"Base1\";"
 resultado <- dbGetQuery(conexion, query)
 
 print(resultado)
+
+
 
 
