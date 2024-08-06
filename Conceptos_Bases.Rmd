@@ -1,0 +1,138 @@
+---
+title: \textbf{Conceptos N1 Bases de Datos}
+subtitle: Bases de Datos
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+        - Config.txt     # Configuracion de pie, encabezado y usepackge
+  
+---
+
+
+```{r setup, include=FALSE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+
+```{r, include=FALSE}
+library(RPostgres)
+library(DBI)
+
+
+# Crear la conexión utilizando RPostgres
+conexion <- dbConnect(RPostgres::Postgres(), dbname = "Saber",
+                      host = "localhost",
+                      port = 5432,
+                      user = "postgres",
+                      password = "...")
+
+
+knitr::opts_chunk$set(connection = conexion)
+
+```
+
+
+```{sql connection= conexion}
+--- a. ¿Cuantos estudiantes hay por genero (ESTU_GENERO)?
+
+SELECT estu_genero, COUNT(*) AS NUM_ESTUDIANTES
+FROM saber11_2019
+WHERE estu_genero <> '0'
+GROUP BY estu_genero;
+```
+
+```{sql connection= conexion}
+--- b. ¿Por departamento, cuántos del género femenino y cuántos del género masculino?
+
+
+SELECT estu_depto_reside, estu_genero, COUNT(*) AS NUM_ESTUDIANTES
+FROM saber11_2019
+GROUP BY estu_depto_reside, estu_genero;
+```
+
+```{sql connection= conexion}
+--- c. Distribución por género para cada uno de los municipios.
+
+
+SELECT estu_mcpio_reside, estu_genero, COUNT(*) AS NUM_ESTUDIANTES
+FROM saber11_2019
+WHERE estu_depto_reside = 'CESAR'
+GROUP BY estu_mcpio_reside, estu_genero;
+
+```
+
+```{sql connection= conexion}
+--- d. Distribución para el desempeño en Inglés (DESEMP_INGLES) por municipios.
+
+
+SELECT estu_mcpio_reside, desemp_ingles, COUNT(*) AS NUM_ESTUDIANTES
+FROM saber11_2019
+WHERE estu_depto_reside = 'CESAR'
+GROUP BY estu_mcpio_reside, desemp_ingles;
+```
+
+```{sql connection= conexion}
+--- e. promedio del puntaje global para clos municipios del departamento del Cesar.
+
+
+SELECT estu_mcpio_reside, AVG(punt_global) AS PROM_PUNT_GLOBAL
+FROM saber11_2019
+WHERE estu_depto_reside = 'CESAR'
+GROUP BY estu_mcpio_reside;
+```
+
+```{sql connection= conexion}
+--- Promedio del puntaje global nacional:
+
+
+SELECT AVG(punt_global) AS PROM_PUNT_GLOBAL_NACIONAL
+FROM saber11_2019;
+```
+
+```{sql connection= conexion}
+--- Promedio del puntaje global nacional:
+
+
+SELECT AVG(punt_global) AS PROM_PUNT_GLOBAL_NACIONAL
+FROM saber11_2019;
+```
+
+
+```{sql connection= conexion}
+--- Promedio del puntaje global en el departamento del Cesar:
+
+
+SELECT AVG(punt_global) AS PROM_PUNT_GLOBAL_CESAR
+FROM saber11_2019
+WHERE estu_depto_reside = 'CESAR';
+
+```
+
+```{sql connection= conexion}
+--- g. Promedio de:lectura crítica, matemáticas, ciencias naturales, competencia ciudadana
+
+SELECT 
+    AVG(punt_lectura_critica) AS PROM_LECTURA_CRITICA,
+    AVG(punt_matematicas) AS PROM_MATEMATICAS,
+    AVG(punt_c_naturales) AS PROM_NATURALES,
+    AVG(punt_sociales_ciudadanas) AS PROM_CIUDADANAS
+FROM saber11_2019
+WHERE estu_depto_reside = 'CESAR';
+```
+
+
+

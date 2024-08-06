@@ -86,4 +86,83 @@ CREATE TABLE saber11_2019 (
 );
 
 
+### a. ¿Cuántos estudiantes hay por género (ESTU_GENERO)?
+
+
+SELECT ESTU_GENERO, COUNT(*) AS NUM_ESTUDIANTES
+FROM saber11_2019
+GROUP BY ESTU_GENERO;
+
+
+### b. ¿Por departamento, cuántos del género femenino y cuántos del género masculino?
+
+
+SELECT ESTU_DEPTO_RESIDE, ESTU_GENERO, COUNT(*) AS NUM_ESTUDIANTES
+FROM saber11_2019
+GROUP BY ESTU_DEPTO_RESIDE, ESTU_GENERO;
+
+
+### c. Para el departamento del Cesar, diga la distribución por género para cada uno de los municipios.
+
+
+SELECT ESTU_MCPIO_RESIDE, ESTU_GENERO, COUNT(*) AS NUM_ESTUDIANTES
+FROM saber11_2019
+WHERE ESTU_DEPTO_RESIDE = 'Cesar'
+GROUP BY ESTU_MCPIO_RESIDE, ESTU_GENERO;
+
+
+### d. Para el departamento del Cesar, diga la distribución para el desempeño en Inglés (DESEMP_INGLES) por municipios.
+
+
+SELECT ESTU_MCPIO_RESIDE, DESEMP_INGLES, COUNT(*) AS NUM_ESTUDIANTES
+FROM saber11_2019
+WHERE ESTU_DEPTO_RESIDE = 'Cesar'
+GROUP BY ESTU_MCPIO_RESIDE, DESEMP_INGLES;
+
+
+### e. Diga cuál es el promedio del puntaje global (PUNT_GLOBAL) para cada uno de los municipios del departamento del Cesar.
+
+
+SELECT ESTU_MCPIO_RESIDE, AVG(PUNT_GLOBAL) AS PROMEDIO_PUNT_GLOBAL
+FROM saber11_2019
+WHERE ESTU_DEPTO_RESIDE = 'Cesar'
+GROUP BY ESTU_MCPIO_RESIDE;
+
+
+### f. Conozca el promedio del puntaje global nacional y compárelo con los obtenidos en el departamento del Cesar.
+
+#### Promedio del puntaje global nacional:
+
+
+SELECT AVG(PUNT_GLOBAL) AS PROMEDIO_PUNT_GLOBAL_NACIONAL
+FROM saber11_2019;
+
+
+#### Promedio del puntaje global en el departamento del Cesar:
+
+
+SELECT AVG(PUNT_GLOBAL) AS PROMEDIO_PUNT_GLOBAL_CESAR
+FROM saber11_2019
+WHERE ESTU_DEPTO_RESIDE = 'Cesar';
+
+
+### g. Para el departamento del Cesar, diga cuál es el promedio de: puntaje de lectura crítica (PUNT_LECTURA_CRITICA), puntaje de matemáticas (PUNT_MATEMATICAS), puntaje de ciencias naturales (PUNT_C_NATURALES), puntaje de competencia ciudadana (PUNT_SOCIALES_CIUDADANAS).
+
+SELECT 
+    AVG(PUNT_LECTURA_CRITICA) AS PROMEDIO_PUNT_LECTURA_CRITICA,
+    AVG(PUNT_MATEMATICAS) AS PROMEDIO_PUNT_MATEMATICAS,
+    AVG(PUNT_C_NATURALES) AS PROMEDIO_PUNT_C_NATURALES,
+    AVG(PUNT_SOCIALES_CIUDADANAS) AS PROMEDIO_PUNT_SOCIALES_CIUDADANAS
+FROM saber11_2019
+WHERE ESTU_DEPTO_RESIDE = 'Cesar';
+
+
+
+
+
+
+
+
+
+
 
