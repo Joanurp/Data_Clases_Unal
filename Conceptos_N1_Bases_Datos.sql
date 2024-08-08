@@ -1,4 +1,8 @@
 
+------- Actividad Verifcadora Bass de Datos ---------------------------
+
+
+
 CREATE TABLE saber11_2019 (
     ESTU_TIPODOCUMENTO CHARACTER VARYING(255),
     ESTU_NACIONALIDAD CHARACTER VARYING(255),
@@ -167,6 +171,116 @@ SELECT
     AVG(punt_sociales_ciudadanas) AS PROM_CIUDADANAS
 FROM saber11_2019
 WHERE estu_depto_reside = 'CESAR';
+
+
+-------------- Base de Datos de Covid 19 en Colombia --------------
+
+
+CREATE TABLE casos_covid (
+    fecha_reporte_web TIMESTAMP,
+    id_caso CHARACTER VARYING(255) PRIMARY KEY,
+    fecha_notificacion DATE,
+    codigo_divipola_departamento CHARACTER VARYING(255),
+    nombre_departamento CHARACTER VARYING(255),
+    codigo_divipola_municipio CHARACTER VARYING(255),
+    nombre_municipio CHARACTER VARYING(255),
+    edad INTEGER,
+    unidad_medida_edad CHARACTER VARYING(255),
+    sexo CHARACTER VARYING(255),
+    tipo_contagio CHARACTER VARYING(255),
+    ubicacion_caso CHARACTER VARYING(255),
+    estado CHARACTER VARYING(255),
+    codigo_iso_pais CHAR(2),
+    nombre_pais CHARACTER VARYING(255),
+    recuperado BOOLEAN,
+    fecha_inicio_sintomas DATE,
+    fecha_muerte DATE,
+    fecha_diagnostico DATE,
+    fecha_recuperacion DATE,
+    tipo_recuperacion CHARACTER VARYING(255),
+    pertenencia_etnica CHARACTER VARYING(255),
+    nombre_grupo_etnico CHARACTER VARYING(255)
+);
+
+
+--- ¿Cuántas personas fallecidas por departamentos?
+
+
+SELECT nombre_departamento, COUNT(*) AS total_fallecidos
+FROM casos_covid
+WHERE estado = 'Fallecido'
+GROUP BY nombre_departamento
+ORDER BY total_fallecidos DESC;
+
+
+-- ¿Cuántas personas recuperadas por departamento?
+
+
+SELECT nombre_departamento, COUNT(*) AS total_recuperados
+FROM casos_covid
+WHERE estado = 'Recuperado'
+GROUP BY nombre_departamento
+ORDER BY total_recuperados DESC;
+
+
+
+--- Para el departamento del Cesar, ¿cuántas personas en total fallecidas?
+
+
+SELECT COUNT(*) AS total_fallecidos
+FROM casos_covid
+WHERE estado = 'Fallecido'
+  AND nombre_departamento = 'CESAR';
+
+
+
+--- **Para el departamento del Cesar, ¿cuántas personas en total fallecidas por municipios?**
+
+
+SELECT nombre_municipio, COUNT(*) AS total_fallecidos
+FROM casos_covid
+WHERE estado = 'Fallecido'
+  AND nombre_departamento = 'CESAR'
+GROUP BY nombre_municipio
+ORDER BY total_fallecidos DESC;
+
+
+--- ¿En qué municipio se presentó mayor frecuencia de fallecidos?
+
+
+SELECT nombre_municipio, COUNT(*) AS total_fallecidos
+FROM casos_covid
+WHERE estado = 'Fallecido'
+GROUP BY nombre_municipio
+ORDER BY total_fallecidos DESC
+LIMIT 1;
+
+
+-- Para las ciudades: Valledupar, Santa Marta, Barranquilla, Cartagena, Sincelejo y Montería, ¿dónde se presentó el mayor promedio de fallecidos?
+
+
+SELECT nombre_municipio, AVG(total_fallecidos) AS promedio_fallecidos
+FROM (
+    SELECT nombre_municipio, COUNT(*) AS total_fallecidos
+    FROM casos_covid
+    WHERE estado = 'Fallecido'
+      AND nombre_municipio IN ('VALLEDUPAR', 'SANTA MARTHA', 'BARRANQUILLA', 'CARTAGENA', 'SINCELEJO', 'MONTERIA')
+    GROUP BY nombre_municipio
+) subquery
+GROUP BY nombre_municipio
+ORDER BY promedio_fallecidos DESC
+LIMIT 1;
+
+
+
+--- Total de Fallecidos y recuperados en el municipio de Pueblo Bello, Cesar.
+
+SELECT 
+    SUM(CASE WHEN estado = 'Fallecido' THEN 1 ELSE 0 END) AS total_fallecidos,
+    SUM(CASE WHEN estado = 'Recuperado' THEN 1 ELSE 0 END) AS total_recuperados
+FROM casos_covid
+WHERE nombre_municipio = 'Pueblo Bello'
+  AND nombre_departamento = 'CESAR';
 
 
 
