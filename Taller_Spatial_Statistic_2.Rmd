@@ -1,0 +1,44 @@
+---
+title: \textbf{Taller 2 Estadistica Espacial}
+subtitle: Bases de Datos
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+        - Config.txt     # Configuracion de pie, encabezado y usepackge
+  
+---
+
+
+```{r setup, include=FALSE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+
+```{r}
+
+
+  
+
+```
+
+
+
+
+
+
+
+
