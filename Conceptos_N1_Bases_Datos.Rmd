@@ -137,10 +137,9 @@ CREATE TABLE saber11_2019 (
 
 ```
 
-
+## ¿Cuantos estudiantes hay por genero (ESTU_GENERO)?
 
 ```{sql connection= conexion}
---- a. ¿Cuantos estudiantes hay por genero (ESTU_GENERO)?
 
 SELECT estu_genero, COUNT(*) AS NUM_ESTUDIANTES
 FROM saber11_2019
@@ -148,18 +147,18 @@ WHERE estu_genero <> '0'
 GROUP BY estu_genero;
 ```
 
-```{sql connection= conexion}
---- b. ¿Por departamento, cuántos del género femenino y cuántos del género masculino?
+## ¿Por departamento, cuántos del género femenino y cuántos del género masculino?
 
+```{sql connection= conexion}
 
 SELECT estu_depto_reside, estu_genero, COUNT(*) AS NUM_ESTUDIANTES
 FROM saber11_2019
 GROUP BY estu_depto_reside, estu_genero;
 ```
 
-```{sql connection= conexion}
---- c. Distribución por género para cada uno de los municipios.
+## Distribución por género para cada uno de los municipios.
 
+```{sql connection= conexion}
 
 SELECT estu_mcpio_reside, estu_genero, COUNT(*) AS NUM_ESTUDIANTES
 FROM saber11_2019
@@ -168,9 +167,9 @@ GROUP BY estu_mcpio_reside, estu_genero;
 
 ```
 
-```{sql connection= conexion}
---- d. Distribución para el desempeño en Inglés (DESEMP_INGLES) por municipios.
+## Distribución para el desempeño en Inglés (DESEMP_INGLES) por municipios.
 
+```{sql connection= conexion}
 
 SELECT estu_mcpio_reside, desemp_ingles, COUNT(*) AS NUM_ESTUDIANTES
 FROM saber11_2019
@@ -178,9 +177,9 @@ WHERE estu_depto_reside = 'CESAR'
 GROUP BY estu_mcpio_reside, desemp_ingles;
 ```
 
-```{sql connection= conexion}
---- e. promedio del puntaje global para clos municipios del departamento del Cesar.
+## promedio del puntaje global para clos municipios del departamento del Cesar.
 
+```{sql connection= conexion}
 
 SELECT estu_mcpio_reside, AVG(punt_global) AS PROM_PUNT_GLOBAL
 FROM saber11_2019
@@ -188,25 +187,25 @@ WHERE estu_depto_reside = 'CESAR'
 GROUP BY estu_mcpio_reside;
 ```
 
-```{sql connection= conexion}
---- Promedio del puntaje global nacional:
+## Promedio del puntaje global nacional:
 
+```{sql connection= conexion}
 
 SELECT AVG(punt_global) AS PROM_PUNT_GLOBAL_NACIONAL
 FROM saber11_2019;
 ```
 
-```{sql connection= conexion}
---- Promedio del puntaje global nacional:
+## Promedio del puntaje global nacional:
 
+```{sql connection= conexion}
 
 SELECT AVG(punt_global) AS PROM_PUNT_GLOBAL_NACIONAL
 FROM saber11_2019;
 ```
 
+## Promedio del puntaje global en el departamento del Cesar:
 
 ```{sql connection= conexion}
---- Promedio del puntaje global en el departamento del Cesar:
 
 
 SELECT AVG(punt_global) AS PROM_PUNT_GLOBAL_CESAR
@@ -215,8 +214,10 @@ WHERE estu_depto_reside = 'CESAR';
 
 ```
 
+## Promedio de:lectura crítica, matemáticas, ciencias naturales, competencia ciudadana
+
 ```{sql connection= conexion}
---- g. Promedio de:lectura crítica, matemáticas, ciencias naturales, competencia ciudadana
+
 
 SELECT 
     AVG(punt_lectura_critica) AS PROM_LECTURA_CRITICA,
@@ -225,6 +226,127 @@ SELECT
     AVG(punt_sociales_ciudadanas) AS PROM_CIUDADANAS
 FROM saber11_2019
 WHERE estu_depto_reside = 'CESAR';
+```
+
+
+# \textcolor{blue}{Base de Datos de Covid 19 en Colombia}
+
+
+```{sql connection = conexion}
+
+/*
+CREATE TABLE casos_covid (
+    fecha_reporte_web TIMESTAMP,
+    id_caso CHARACTER VARYING(255) PRIMARY KEY,
+    fecha_notificacion DATE,
+    codigo_divipola_departamento CHARACTER VARYING(255),
+    nombre_departamento CHARACTER VARYING(255),
+    codigo_divipola_municipio CHARACTER VARYING(255),
+    nombre_municipio CHARACTER VARYING(255),
+    edad INTEGER,
+    unidad_medida_edad CHARACTER VARYING(255),
+    sexo CHARACTER VARYING(255),
+    tipo_contagio CHARACTER VARYING(255),
+    ubicacion_caso CHARACTER VARYING(255),
+    estado CHARACTER VARYING(255),
+    codigo_iso_pais CHAR(2),
+    nombre_pais CHARACTER VARYING(255),
+    recuperado BOOLEAN,
+    fecha_inicio_sintomas DATE,
+    fecha_muerte DATE,
+    fecha_diagnostico DATE,
+    fecha_recuperacion DATE,
+    tipo_recuperacion CHARACTER VARYING(255),
+    pertenencia_etnica CHARACTER VARYING(255),
+    nombre_grupo_etnico CHARACTER VARYING(255)
+);
+*/
+
+```
+
+
+## **¿Cuántas personas fallecidas por departamentos?**
+
+```{sql connection= conexion}
+SELECT nombre_departamento, COUNT(*) AS total_fallecidos
+FROM casos_covid
+WHERE estado = 'Fallecido'
+GROUP BY nombre_departamento
+ORDER BY total_fallecidos DESC;
+```
+
+
+## **¿Cuántas personas recuperadas por departamento?**
+
+```{sql connection= conexion}
+SELECT nombre_departamento, COUNT(*) AS total_recuperados
+FROM casos_covid
+WHERE estado = 'Recuperado'
+GROUP BY nombre_departamento
+ORDER BY total_recuperados DESC;
+```
+
+
+## **Para el departamento del Cesar, ¿cuántas personas en total fallecidas?**
+
+```{sql connection= conexion}
+SELECT COUNT(*) AS total_fallecidos
+FROM casos_covid
+WHERE estado = 'Fallecido'
+  AND nombre_departamento = 'CESAR';
+```
+
+
+## **Para el departamento del Cesar, ¿cuántas personas en total fallecidas por municipios?**
+
+```{sql connection= conexion}
+SELECT nombre_municipio, COUNT(*) AS total_fallecidos
+FROM casos_covid
+WHERE estado = 'Fallecido'
+  AND nombre_departamento = 'CESAR'
+GROUP BY nombre_municipio
+ORDER BY total_fallecidos DESC;
+```
+
+
+## **¿En qué municipio se presentó mayor frecuencia de fallecidos?**
+
+```{sql connection= conexion}
+SELECT nombre_municipio, COUNT(*) AS total_fallecidos
+FROM casos_covid
+WHERE estado = 'Fallecido'
+GROUP BY nombre_municipio
+ORDER BY total_fallecidos DESC
+LIMIT 1;
+```
+
+
+## **Para las ciudades: Valledupar, Santa Marta, Barranquilla, Cartagena, Sincelejo y Montería, ¿dónde se presentó el mayor promedio de fallecidos?**
+
+```{sql connection= conexion}
+SELECT nombre_municipio, AVG(total_fallecidos) AS promedio_fallecidos
+FROM (
+    SELECT nombre_municipio, COUNT(*) AS total_fallecidos
+    FROM casos_covid
+    WHERE estado = 'Fallecido'
+      AND nombre_municipio IN ('VALLEDUPAR', 'SANTA MARTHA', 'BARRANQUILLA', 'CARTAGENA', 'SINCELEJO', 'MONTERIA')
+    GROUP BY nombre_municipio
+) subquery
+GROUP BY nombre_municipio
+ORDER BY promedio_fallecidos DESC
+LIMIT 1;
+```
+
+
+## **Total de Fallecidos y recuperados en el municipio de Pueblo Bello, Cesar.**
+
+```{sql connection= conexion}
+SELECT 
+    SUM(CASE WHEN estado = 'Fallecido' THEN 1 ELSE 0 END) AS total_fallecidos,
+    SUM(CASE WHEN estado = 'Recuperado' THEN 1 ELSE 0 END) AS total_recuperados
+FROM casos_covid
+WHERE nombre_municipio = 'Pueblo Bello'
+  AND nombre_departamento = 'CESAR';
 ```
 
 
