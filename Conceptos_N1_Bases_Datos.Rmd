@@ -262,6 +262,7 @@ CREATE TABLE casos_covid (
 );
 */
 
+
 ```
 
 
@@ -348,6 +349,32 @@ FROM casos_covid
 WHERE nombre_municipio = 'Pueblo Bello'
   AND nombre_departamento = 'CESAR';
 ```
+
+
+```{r}
+
+library(dplyr)
+library(lubridate)
+
+file.choose()
+# Leer el archivo CSV
+
+data <- read.csv("C:\\Users\\Estudiantes\\Videos\\Data_Clases_Unal\\Casos_positivos_de_COVID-19_en_Colombia.csv", stringsAsFactors = FALSE, sep = ";")
+
+
+# Convertir el formato de fecha y hora
+data <- data %>%
+  mutate(fecha = dmy_hm(fecha)) %>%
+  mutate(fecha = format(fecha, "%Y-%m-%d %H:%M:%S"))
+
+# Guardar el archivo modificado
+write.csv(data, "path/to/your/converted_file.csv", row.names = FALSE)
+
+```
+
+
+
+
 
 
 
