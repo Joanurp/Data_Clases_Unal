@@ -225,16 +225,19 @@ ggplot(nc.sids, aes(x = BIR79, y = SID79)) +
 library(gstat)
 library(sp)
 
-# Convertir meuse.grid a SpatialPixelsDataFrame
+# Convertir a SpatialPixelsDataFrame
 nc.sids_sf <- st_as_sf(nc.sids, coords = c("lon", "lat"), crs = 4269)
 
 # Definir el variograma
-vgm_model <- vgm(psill = 1, model = "Sph", range = 1000, nugget = 0)
+ajuste <- variogram(log(BIR79 + 1) ~ 1, nc.sids_sf)
 
 # Ajustar el variograma a los datos
-model_fit <- fit.variogram(variogram(log(BIR79) ~ 1, data = nc.sids), model = vgm_model)
+model_fit <- fit.variogram(variogram(ajuste, vgm(1, "Sph", 300, 1))
+                           
+nc_sids_grid <- st_make_grid(nc.sids_sf, n = c(100, 100), what = "centers")
 
-kriging_result <- krige(log(BIR79) ~ 1, nc.sids, nc.sids_sf model = model_fit)
+                           
+kriging_result <- krige(log(BIR79 + 1) ~ 1, as(nc_sids_sf, "Spatial"), as(nc.sids_grid, "Spatial") model = model_fit)
 
 # Visualización de los resultados de Kriging
 spplot(kriging_result["var1.pred"])
