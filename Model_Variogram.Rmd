@@ -1,0 +1,71 @@
+---
+title: \textbf{Tipos de Modelos de Variograma}
+subtitle: Estadística Espacial
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+        - Config.txt     # Configuracion de pie, encabezado y usepackge
+  
+---
+
+
+```{r setup, include=TRUE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+## variograma
+
+```{r}
+library(gstat)
+library(sp)
+
+data("meuse")
+
+variograma <- variogram(log(zinc + 1) ~ 1, data = meuse, locations = ~x+y)
+
+```
+
+
+
+## Modelo Exponencial 
+```{r}
+modelo_exp <- fit.variogram(variograma, model = vgm(psill = 1, model = "Exp", range = 900, nugget = 0.5))
+plot(variograma, modelo_exp)
+```
+
+
+## Modelo Gausiano
+```{r}
+modelo_Gau <- fit.variogram(variograma, model = vgm(psill = 1, model = "Gau", range = 900, nugget = 0.5))
+plot(variograma, modelo_Gau)
+```
+
+
+## Modelo Monomico
+```{r}
+modelo_Pow <- fit.variogram(variograma, model = vgm(psill = 1, model = "Pow", range = 1, nugget = 0.5))
+plot(variograma, modelo_Pow)
+```
+
+
+## Modelo Pepita Pura
+
+```{r}
+modelo_PP <- fit.variogram(variograma, model = vgm(psill = 1, model = "Nug", range = 0, nugget = 0.5))
+plot(variograma, modelo_PP)
+```
+
