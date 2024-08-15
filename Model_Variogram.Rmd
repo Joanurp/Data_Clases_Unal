@@ -1,0 +1,429 @@
+---
+title: \textbf{Modelos Espaciales de Variogramas}
+subtitle: Estadística Espacial
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+        - Config.txt     # Configuracion de pie, encabezado y usepackge
+---
+
+
+```{r setup, include=TRUE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+
+```{r}
+library(gstat)
+library(tidyverse)
+library(sp)
+library(dplyr)
+library(gstat)
+library(ggplot2)
+library(scales)
+library(magrittr)
+library(gridExtra)
+library(sp)
+library(lattice)
+
+```
+
+
+
+## \textcolor{blue}{Modelo Exponencial} 
+
+```{r}
+
+data("meuse")
+data("meuse.grid")
+
+coordinates(meuse) <- ~ x + y
+coordinates(meuse.grid) <- ~ x + y
+
+variograma <- variogram(log(zinc) ~ 1, data = meuse)
+modelo_exp <- fit.variogram(variograma, model = vgm(psill = 1, model = "Exp",
+                                                    range = 900, nugget = 0.5))
+
+
+```
+
+
+```{r}
+# Convertir variograma a data frame
+variograma_df <- as.data.frame(variograma)
+
+# Generar datos del modelo ajustado
+modelo_exp_pred <- variogramLine(modelo_exp, maxdist = max(variograma$dist))
+
+# Convertir a data frame
+modelo_exp_df <- as.data.frame(modelo_exp_pred)
+
+```
+
+
+```{r}
+nugget <- modelo_exp$psill[1]  # Valor del nugget
+sill <- sum(modelo_exp$psill)  # Meseta (nugget + sill)
+range <- modelo_exp$range[2]   # Rango (del modelo exponencial)
+
+```
+
+
+```{r}
+
+# Crear el gráfico con anotaciones, etiquetas y puntos de intersección
+ggplot() +
+  # Gráfico del variograma empírico
+  geom_point(data = variograma_df, aes(x = dist, y = gamma), color = "blue", size = 3) +
+  
+  # Etiquetas de los valores en cada punto del variograma
+  geom_text(data = variograma_df, aes(x = dist, y = gamma, label = round(gamma, 2)), 
+            vjust = -1, hjust = 0.5, size = 3, color = "blue") +
+  
+  # Gráfico del modelo ajustado
+  geom_line(data = modelo_exp_df, aes(x = dist, y = gamma), color = "red", size = 1.2) +
+  
+  # Línea horizontal del nugget
+  geom_hline(yintercept = nugget, linetype = "dashed", color = "green") +
+  
+  # Línea horizontal de la meseta (sill)
+  geom_hline(yintercept = sill, linetype = "dashed", color = "purple") +
+  
+  # Línea vertical del rango
+  geom_vline(xintercept = range, linetype = "dashed", color = "orange") +
+  
+  # Puntos de intersección entre las líneas del rango, nugget y sill
+  geom_point(aes(x = range, y = nugget), color = "orange", size = 4, shape = 17) +
+  geom_point(aes(x = range, y = sill), color = "orange", size = 4, shape = 17) +   
+  geom_point(aes(x = 0, y = nugget), color = "green", size = 4, shape = 17) +   
+  geom_point(aes(x = range, y = sill), color = "purple", size = 4, shape = 17) +  
+  
+  # Anotaciones para el rango y meseta, colocadas al lado de las intersecciones
+  annotate("text", x = range * 1.05, y = nugget, 
+           label = paste0("Rango: ", round(range, 2)), 
+           color = "orange", size = 5, hjust = 0) +
+  annotate("text", x = range * 1.05, y = sill, 
+           label = paste0("Meseta (Sill): ", round(sill, 2)), 
+           color = "purple", size = 5, hjust = 0) +
+  
+  # Anotación para el nugget, colocada al lado del punto (0, nugget)
+  annotate("text", x = 0, y = nugget * 1.1, 
+           label = paste0("Nugget: ", round(nugget, 2)), 
+           color = "green", size = 5, hjust = -0.1) +
+  
+  # Estética y etiquetas
+  theme_minimal() +
+  labs(title = "Variograma Empírico y Modelo Ajustado",
+       x = "Distancia",
+       y = "Semivarianza") +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title = element_text(size = 15),
+    axis.text = element_text(size = 12)
+  )
+
+
+
+```
+
+
+```{r}
+lzn.kriged <- krige(log(zinc) ~ 1, meuse, meuse.grid, 
+                    model=modelo_exp);head(lzn.kriged)
+```
+
+
+```{r}
+plot1 <- meuse %>% as.data.frame %>% 
+  ggplot(aes(x, y)) + geom_point(aes(size=zinc), color="blue", alpha=3/4) + 
+  ggtitle("Zinc Concentration (ppm)") + coord_equal() + theme_bw()
+
+plot2 <- lzn.kriged %>% as.data.frame %>%
+  ggplot(aes(x=x, y=y)) + geom_tile(aes(fill=var1.pred)) + coord_equal() +
+  scale_fill_gradient(low = "yellow", high="red") +
+  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+  theme_bw()
+
+
+grid.arrange(plot1, plot2, ncol = 2)
+
+```
+
+
+## \textcolor{blue}{Modelo Gaussiano}
+
+```{r}
+modelo_Gau <- fit.variogram(variograma, model = vgm(psill = 1, model = "Gau",
+                                                    range = 900, nugget = 0.5))
+```
+
+
+
+```{r}
+# Convertir variograma a data frame
+variograma_df <- as.data.frame(variograma)
+
+# Generar datos del modelo ajustado
+modelo_Gau_pred <- variogramLine(modelo_Gau, maxdist = max(variograma$dist))
+
+# Convertir a data frame
+modelo_Gau_df <- as.data.frame(modelo_Gau_pred)
+
+```
+
+
+```{r}
+nuggetg <- modelo_Gau$psill[1]  # Valor del nugget
+sillg <- sum(modelo_Gau$psill)  # Meseta (nugget + sill)
+rangeg <- modelo_Gau$range[2]   # Rango (del modelo exponencial)
+
+```
+
+
+```{r}
+
+# Crear el gráfico con anotaciones, etiquetas y puntos de intersección
+ggplot() +
+  # Gráfico del variograma empírico
+  geom_point(data = variograma_df, aes(x = dist, y = gamma), color = "blue", size = 3) +
+  
+  # Etiquetas de los valores en cada punto del variograma
+  geom_text(data = variograma_df, aes(x = dist, y = gamma, label = round(gamma, 2)), 
+            vjust = -1, hjust = 0.5, size = 3, color = "blue") +
+  
+  # Gráfico del modelo ajustado
+  geom_line(data = modelo_Gau_df, aes(x = dist, y = gamma), color = "red", size = 1.2) +
+  
+  # Línea horizontal del nugget
+  geom_hline(yintercept = nuggetg, linetype = "dashed", color = "green") +
+  
+  # Línea horizontal de la meseta (sill)
+  geom_hline(yintercept = sillg, linetype = "dashed", color = "purple") +
+  
+  # Línea vertical del rango
+  geom_vline(xintercept = rangeg, linetype = "dashed", color = "orange") +
+  
+  # Puntos de intersección entre las líneas del rango, nugget y sill
+  geom_point(aes(x = rangeg, y = nuggetg), color = "orange", size = 4, shape = 17) +
+  geom_point(aes(x = rangeg, y = sillg), color = "orange", size = 4, shape = 17) +   
+  geom_point(aes(x = 0, y = nuggetg), color = "green", size = 4, shape = 17) +   
+  geom_point(aes(x = rangeg, y = sillg), color = "purple", size = 4, shape = 17) +  
+  
+  # Anotaciones para el rango y meseta, colocadas al lado de las intersecciones
+  annotate("text", x = rangeg * 1.05, y = nuggetg, 
+           label = paste0("Rango: ", round(rangeg, 2)), 
+           color = "orange", size = 5, hjust = 0) +
+  annotate("text", x = rangeg * 1.05, y = sillg, 
+           label = paste0("Meseta (Sill): ", round(sillg, 2)), 
+           color = "purple", size = 5, hjust = 0) +
+  
+  # Anotación para el nugget, colocada al lado del punto (0, nugget)
+  annotate("text", x = 0, y = nuggetg * 1.1, 
+           label = paste0("Nugget: ", round(nuggetg, 2)), 
+           color = "green", size = 5, hjust = -0.1) +
+  
+  # Estética y etiquetas
+  theme_minimal() +
+  labs(title = "Variograma Empírico y Modelo Ajustado",
+       x = "Distancia",
+       y = "Semivarianza") +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title = element_text(size = 15),
+    axis.text = element_text(size = 12)
+  )
+
+
+
+```
+
+
+```{r}
+lzn.krigedg <- krige(log(zinc) ~ 1, meuse, meuse.grid,
+                     model=modelo_Gau);head(lzn.krigedg)
+```
+
+
+```{r}
+plot1 <- meuse %>% as.data.frame %>% 
+  ggplot(aes(x, y)) + geom_point(aes(size=zinc), color="blue", alpha=3/4) + 
+  ggtitle("Zinc Concentration (ppm)") + coord_equal() + theme_bw()
+
+plot2 <- lzn.krigedg %>% as.data.frame %>%
+  ggplot(aes(x=x, y=y)) + geom_tile(aes(fill=var1.pred)) + coord_equal() +
+  scale_fill_gradient(low = "yellow", high="red") +
+  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+  theme_bw()
+
+
+grid.arrange(plot1, plot2, ncol = 2)
+
+```
+
+
+## \textcolor{blue}{Modelo Monomico}
+
+```{r}
+modelo_Pow <- fit.variogram(variograma, model = vgm(psill = 1, model = "Pow",
+                                                    range = 1, nugget = 0.1))
+```
+
+
+```{r}
+# Convertir variograma a data frame
+variograma_df <- as.data.frame(variograma)
+
+# Generar datos del modelo ajustado
+modelo_Pow_pred <- variogramLine(modelo_Pow, maxdist = max(variograma$dist))
+
+# Convertir a data frame
+modelo_Pow_df <- as.data.frame(modelo_Pow_pred)
+
+```
+
+
+```{r}
+nuggetp <- modelo_Pow$psill[1]  # Valor del nugget
+sillp <- sum(modelo_Pow$psill)  # Meseta (nugget + sill)
+rangep <- modelo_Pow$range[2]   # Rango (del modelo exponencial)
+
+```
+
+
+```{r}
+
+# Crear el gráfico con anotaciones, etiquetas y puntos de intersección
+ggplot() +
+  # Gráfico del variograma empírico
+  geom_point(data = variograma_df, aes(x = dist, y = gamma), color = "blue", size = 3) +
+  
+  # Etiquetas de los valores en cada punto del variograma
+  geom_text(data = variograma_df, aes(x = dist, y = gamma, label = round(gamma, 2)), 
+            vjust = -1, hjust = 0.5, size = 3, color = "blue") +
+  
+  # Gráfico del modelo ajustado
+  geom_line(data = modelo_Pow_df, aes(x = dist, y = gamma), color = "red", size = 1.2) +
+  
+  # Línea horizontal del nugget
+  geom_hline(yintercept = nuggetp, linetype = "dashed", color = "green") +
+  
+  # Línea horizontal de la meseta (sill)
+  geom_hline(yintercept = sillp, linetype = "dashed", color = "purple") +
+  
+  # Línea vertical del rango
+  geom_vline(xintercept = rangep, linetype = "dashed", color = "orange") +
+  
+  # Puntos de intersección entre las líneas del rango, nugget y sill
+  geom_point(aes(x = rangep, y = nuggetp), color = "orange", size = 4, shape = 17) +
+  geom_point(aes(x = rangep, y = sillp), color = "orange", size = 4, shape = 17) +   
+  geom_point(aes(x = 0, y = nuggetp), color = "green", size = 4, shape = 17) +   
+  geom_point(aes(x = rangep, y = sillp), color = "purple", size = 4, shape = 17) +  
+  
+  # Anotaciones para el rango y meseta, colocadas al lado de las intersecciones
+  annotate("text", x = rangep * 1.05, y = nuggetp, 
+           label = paste0("Rango: ", round(rangep, 2)), 
+           color = "orange", size = 5, hjust = 0) +
+  annotate("text", x = rangep * 1.05, y = sillg, 
+           label = paste0("Meseta (Sill): ", round(sillp, 2)), 
+           color = "purple", size = 5, hjust = 0) +
+  
+  # Anotación para el nugget, colocada al lado del punto (0, nugget)
+  annotate("text", x = 0, y = nuggetp * 1.1, 
+           label = paste0("Nugget: ", round(nuggetp, 2)), 
+           color = "green", size = 5, hjust = -0.1) +
+  
+  # Estética y etiquetas
+  theme_minimal() +
+  labs(title = "Variograma Empírico y Modelo Ajustado",
+       x = "Distancia",
+       y = "Semivarianza") +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+    axis.title = element_text(size = 15),
+    axis.text = element_text(size = 12)
+  )
+
+
+
+```
+
+
+```{r}
+lzn.krigedp <- krige(log(zinc) ~ 1, meuse, meuse.grid,
+                     model=modelo_Pow);head(lzn.krigedp)
+```
+
+
+```{r}
+plot5 <- meuse %>% as.data.frame %>% 
+  ggplot(aes(x, y)) + geom_point(aes(size=zinc), color="red", alpha=3/4) + 
+  ggtitle("Zinc Concentration (ppm)") + coord_equal() + theme_bw()
+
+plot6 <- lzn.krigedp %>% as.data.frame %>%
+  ggplot(aes(x=x, y=y)) + geom_tile(aes(fill=var1.pred)) + coord_equal() +
+  scale_fill_gradient(low = "green", high="yellow") +
+  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+  theme_bw()
+
+
+grid.arrange(plot5, plot6, ncol = 2)
+
+```
+
+## \textcolor{blue}{Modelo Pepita Pura}
+
+
+```{r}
+
+# Crear el variograma empírico para la variable zinc
+variograma_empirico <- variogram(log(zinc) ~ 1, meuse)
+
+# Ajustar un modelo de variograma de pepita pura
+model_nugget <- vgm(psill = var(log(meuse$zinc + 1)), model = "Nug", range = 0)
+variograma_ajustado <- fit.variogram(variograma_empirico, model_nugget)
+
+# Graficar el variograma empírico y el modelo ajustado de manera profesional
+plot(variograma_empirico, variograma_ajustado, main = "Variograma Empírico y Modelo Ajustado",
+     xlab = "Distancia", ylab = "Semivarianza", pch = 16, col = "blue")
+
+```
+
+
+```{r}
+
+lzn.krigedp <- krige(log(zinc) ~ 1, meuse, meuse.grid,
+                     model = variograma_ajustado );head(lzn.krigedp)
+
+```
+
+
+```{r}
+
+lzn.krigedp %>% as.data.frame %>%
+  ggplot(aes(x=x, y=y)) + geom_tile(aes(fill=var1.pred)) + coord_equal() +
+  scale_fill_gradient(low = "yellow", high="red") +
+  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+  theme_bw()
+
+```
+
+
+
+
+
+
+
