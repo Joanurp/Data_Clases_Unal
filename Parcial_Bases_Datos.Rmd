@@ -98,7 +98,7 @@ CREATE TABLE Estudiantes (
 
 ### a. Promedio de edad de ingreso según el género
 
-```{sql connection = conexion1}
+```{sql connection = conexion1, eval = FALSE}
 SELECT Género, AVG(Edad_Ingreso) AS Promedio_Edad_Ingreso
 FROM Estudiantes
 GROUP BY Género;
@@ -106,7 +106,7 @@ GROUP BY Género;
 
 ### b. Promedio de edad de ingreso según el estrato
 
-```{sql connection = conexion1}
+```{sql connection = conexion1, eval = FALSE}
 SELECT Estrato, AVG(Edad_Ingreso) AS Promedio_Edad_Ingreso
 FROM Estudiantes
 GROUP BY Estrato;
@@ -114,7 +114,7 @@ GROUP BY Estrato;
 
 ### c. Tabla de frecuencias para tipo de colegio (público, privado, NA o NULL)
 
-```{sql connection = conexion1}
+```{sql connection = conexion1, eval = FALSE}
 SELECT COALESCE(Tipo_Colegio, 'NA') AS Tipo_Colegio, COUNT(*) AS Frecuencia
 FROM Estudiantes
 GROUP BY COALESCE(Tipo_Colegio, 'NA');
@@ -122,21 +122,19 @@ GROUP BY COALESCE(Tipo_Colegio, 'NA');
 
 ### d. Cuántos estudiantes inician su vida universitaria una vez que terminan su bachillerato
 
-Este consulta asume que hay una columna que indica si el estudiante terminó el bachillerato antes de ingresar a la universidad. Aquí se toma como ejemplo una columna llamada `Terminó_Bachillerato`:
 
-```{sql connection = conexion1}
+```{sql connection = conexion1, eval = FALSE}
 SELECT COUNT(*) AS Estudiantes_Inician
 FROM Estudiantes
-WHERE Terminó_Bachillerato = 1;
+WHERE Termino_Bachillerato = 1;
 ```
 
 ### e. Tabla de frecuencia para múltiples variables
 
-Para obtener la frecuencia de cada variable por separado, deberás realizar una consulta para cada variable:
 
 1. **Educación de la madre (Edu_Madre)**
 
-    ```{sql connection = conexion1}
+    ```{sql connection = conexion1, eval = FALSE}
     SELECT Edu_Madre, COUNT(*) AS Frecuencia
     FROM Estudiantes
     GROUP BY Edu_Madre;
@@ -144,7 +142,7 @@ Para obtener la frecuencia de cada variable por separado, deberás realizar una 
 
 2. **Tipo de vivienda (Vivienda_Propia)**
 
-    ```{sql connection = conexion1}
+    ```{sql connection = conexion1, eval = FALSE}
     SELECT Vivienda_Propia, COUNT(*) AS Frecuencia
     FROM Estudiantes
     GROUP BY Vivienda_Propia;
@@ -152,7 +150,7 @@ Para obtener la frecuencia de cada variable por separado, deberás realizar una 
 
 3. **Número de estudiantes que recibieron apoyo (Apoyo_Financiero)**
 
-    ```{sql connection = conexion1}
+    ```{sql connection = conexion1, eval = FALSE}
     SELECT Apoyo_Financiero, COUNT(*) AS Frecuencia
     FROM Estudiantes
     GROUP BY Apoyo_Financiero;
@@ -160,7 +158,7 @@ Para obtener la frecuencia de cada variable por separado, deberás realizar una 
 
 4. **Número de estudiantes que recibieron apoyo de Icetex (Apoyo_Icetex)**
 
-    ```{sql connection = conexion1}
+    ```{sql connection = conexion1, eval = FALSE}
     SELECT Apoyo_Icetex, COUNT(*) AS Frecuencia
     FROM Estudiantes
     GROUP BY Apoyo_Icetex;
@@ -168,42 +166,42 @@ Para obtener la frecuencia de cada variable por separado, deberás realizar una 
 
 5. **Promedio general en el puntaje de inglés (Puntaje_Icfes_Idioma)**
 
-    ```{sql connection = conexion1}
+    ```{sql connection = conexion1, eval = FALSE}
     SELECT AVG(Puntaje_Icfes_Idioma) AS Promedio_Puntaje_Idioma
     FROM Estudiantes;
     ```
 
 6. **Puntaje promedio en matemáticas (Puntaje_Icfes_Matemáticas)**
 
-    ```{sql connection = conexion1}
-    SELECT AVG(Puntaje_Icfes_Matemáticas) AS Promedio_Puntaje_Matemáticas
+    ```{sql connection = conexion1, eval = FALSE}
+    SELECT AVG(Puntaje_Icfes_Matematicas) AS Promedio_Puntaje_Matematicas
     FROM Estudiantes;
     ```
 
 7. **Puntaje promedio en sociales y ciudadanas (Puntaje_Icfes_Sociales_y_ciudadanas)**
 
-    ```{sql connection = conexion1}
+    ```{sql connection = conexion1, eval = FALSE}
     SELECT AVG(Puntaje_Icfes_Sociales_y_ciudadanas) AS Promedio_Puntaje_Sociales
     FROM Estudiantes;
     ```
 
 8. **Puntaje promedio en ciencias naturales (Puntaje_Icfes_Ciencias_naturales)**
 
-    ```{sql connection = conexion1}
+    ```{sql connection = conexion1, eval = FALSE}
     SELECT AVG(Puntaje_Icfes_Ciencias_naturales) AS Promedio_Puntaje_Ciencias
     FROM Estudiantes;
     ```
 
 9. **Puntaje promedio en lectura crítica (Puntaje_Icfes_Lectura_crítica)**
 
-    ```{sql connection = conexion1}
+    ```{sql connection = conexion1, eval = FALSE}
     SELECT AVG(Puntaje_Icfes_Lectura_crítica) AS Promedio_Puntaje_Lectura
     FROM Estudiantes;
     ```
 
 ### f. Promedio del puntaje global por fecha de corte (Cohorte_Ingreso)
 
-```{sql connection = conexion1}
+```{sql connection = conexion1, eval = FALSE}
 SELECT Cohorte_Ingreso, AVG(Icfes_Puntaje_global) AS Promedio_Puntaje_Global
 FROM Estudiantes
 GROUP BY Cohorte_Ingreso;
@@ -212,7 +210,7 @@ GROUP BY Cohorte_Ingreso;
 ### 4. Puntaje máximo y mínimo global por cada programa
 
 
-```{sql connection = conexion1}
+```{sql connection = conexion1, eval = FALSE}
 SELECT Programa, MAX(Icfes_Puntaje_global) AS Puntaje_Maximo, MIN(Icfes_Puntaje_global) AS Puntaje_Minimo
 FROM Estudiantes
 GROUP BY Programa;
@@ -220,7 +218,7 @@ GROUP BY Programa;
 
 ### 5. Tabla de frecuencia por programa para la variable de deserción (Respuesta)
 
-```{sql connection = conexion1}
+```{sql connection = conexion1, eval = FALSE}
 SELECT Programa, Respuesta, COUNT(*) AS Frecuencia
 FROM Estudiantes
 GROUP BY Programa, Respuesta;
