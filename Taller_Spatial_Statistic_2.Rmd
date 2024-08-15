@@ -237,7 +237,7 @@ model_fit <- fit.variogram(variogram(ajuste, vgm(1, "Sph", 300, 1))
 nc_sids_grid <- st_make_grid(nc.sids_sf, n = c(100, 100), what = "centers")
 
                            
-kriging_result <- krige(log(BIR79 + 1) ~ 1, as(nc_sids_sf, "Spatial"), as(nc.sids_grid, "Spatial") model = model_fit)
+kriging_result <- krige(log(BIR79 + 1) ~ 1, as(nc_sids_sf, "Spatial"), as(nc_sids_grid, "Spatial"), model = model_fit)
 
 # Visualización de los resultados de Kriging
 spplot(kriging_result["var1.pred"])
