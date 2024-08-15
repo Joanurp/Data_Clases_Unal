@@ -1,0 +1,245 @@
+---
+title: \textbf{Parcial 1 Bases de Datos}
+subtitle: Bases de Datos
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+        - Config.txt     # Configuracion de pie, encabezado y usepackge
+  
+---
+
+
+```{r setup, include=TRUE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+
+
+```{r, include=FALSE}
+library(RPostgres)
+library(DBI)
+
+
+# Crear la conexión utilizando RPostgres
+conexion1 <- dbConnect(RPostgres::Postgres(), dbname = "Desercion",
+                      host = "localhost",
+                      port = 5432,
+                      user = "Joanurpa",
+                      password = "JL02A&up14")
+
+
+knitr::opts_chunk$set(connection = conexion1)
+
+```
+
+
+```{r}
+library(csv)
+df <- read.csv("C://Users//Estudiantes//Videos//Desercion.csv", fileEncoding = "UTF-8", header = T, sep = ";")
+file.choose()
+
+write.csv(df, "archivo_corregido.csv", fileEncoding = "UTF-8", row.names = FALSE)
+
+```
+
+
+
+
+```{sql connection= conexion1, eval = FALSE}
+
+CREATE TABLE Estudiantes6 (
+    Codigo_Estudiante INT PRIMARY KEY,
+    Edad_Ingreso INT,
+    Genero CHAR(1),
+    Estado_Civil VARCHAR(20),
+    Estrato INT,
+    Ciudad_Residencia VARCHAR(100),
+    Ciudad_de_Nacimiento VARCHAR(100),
+    No_Hermanos INT,
+    Posicion_hermanos INT,
+    No_Miembros_Flia INT,
+    No_Personas_Trabaja INT,
+    Persona_con_Discapacidad BOOLEAN,
+    Tipo_Discapacidad VARCHAR(100),
+    Caracter_Colegio VARCHAR(100),
+    Edad_Icfes INT,
+    Edu_Madre VARCHAR(100),
+    Vivienda_Propia BOOLEAN,
+    Apoyo_Financiero BOOLEAN,
+    Apoyo_economico BOOLEAN,
+    Apoyo_Icetex BOOLEAN,
+    Puntaje_Icfes_Idioma DECIMAL(5, 2),
+    Puntaje_Icfes_Matematicas DECIMAL(5, 2),
+    Puntaje_Icfes_Sociales_y_ciudadanas DECIMAL(5, 2),
+    Puntaje_Icfes_Ciencias_naturales DECIMAL(5, 2),
+    Puntaje_Icfes_Lectura_critica DECIMAL(5, 2),
+    Icfes_Puntaje_global DECIMAL(5, 2),
+    Cohorte_Ingreso VARCHAR(20),
+    Fecha_Ingreso DATE,
+    Facultad VARCHAR(100),
+    Programa VARCHAR(100),
+    Num_Materias_Matriculadas INT,
+    Num_Materias_Aprobadas INT,
+    Num_Materias_Matriculadas_Acumuladas INT,
+    Num_Materias_Aprobadas_Acumuladas INT,
+    Porcentaje_materias_Aprobadas_Del_Total_Matriculado DECIMAL(5, 2),
+    Porcentaje_creditos_Aprobados_Del_Plan_Academico DECIMAL(5, 2),
+    Promedio_Acumulado DECIMAL(5, 2),
+    Periodo_Cohorte VARCHAR(20),
+    Estado_IES VARCHAR(50),
+    Respuesta TEXT
+);
+
+
+```
+
+
+### a. Promedio de edad de ingreso según el género
+
+```{sql connection = conexion1}
+SELECT Género, AVG(Edad_Ingreso) AS Promedio_Edad_Ingreso
+FROM Estudiantes
+GROUP BY Género;
+```
+
+### b. Promedio de edad de ingreso según el estrato
+
+```{sql connection = conexion1}
+SELECT Estrato, AVG(Edad_Ingreso) AS Promedio_Edad_Ingreso
+FROM Estudiantes
+GROUP BY Estrato;
+```
+
+### c. Tabla de frecuencias para tipo de colegio (público, privado, NA o NULL)
+
+```{sql connection = conexion1}
+SELECT COALESCE(Tipo_Colegio, 'NA') AS Tipo_Colegio, COUNT(*) AS Frecuencia
+FROM Estudiantes
+GROUP BY COALESCE(Tipo_Colegio, 'NA');
+```
+
+### d. Cuántos estudiantes inician su vida universitaria una vez que terminan su bachillerato
+
+Este consulta asume que hay una columna que indica si el estudiante terminó el bachillerato antes de ingresar a la universidad. Aquí se toma como ejemplo una columna llamada `Terminó_Bachillerato`:
+
+```{sql connection = conexion1}
+SELECT COUNT(*) AS Estudiantes_Inician
+FROM Estudiantes
+WHERE Terminó_Bachillerato = 1;
+```
+
+### e. Tabla de frecuencia para múltiples variables
+
+Para obtener la frecuencia de cada variable por separado, deberás realizar una consulta para cada variable:
+
+1. **Educación de la madre (Edu_Madre)**
+
+    ```{sql connection = conexion1}
+    SELECT Edu_Madre, COUNT(*) AS Frecuencia
+    FROM Estudiantes
+    GROUP BY Edu_Madre;
+    ```
+
+2. **Tipo de vivienda (Vivienda_Propia)**
+
+    ```{sql connection = conexion1}
+    SELECT Vivienda_Propia, COUNT(*) AS Frecuencia
+    FROM Estudiantes
+    GROUP BY Vivienda_Propia;
+    ```
+
+3. **Número de estudiantes que recibieron apoyo (Apoyo_Financiero)**
+
+    ```{sql connection = conexion1}
+    SELECT Apoyo_Financiero, COUNT(*) AS Frecuencia
+    FROM Estudiantes
+    GROUP BY Apoyo_Financiero;
+    ```
+
+4. **Número de estudiantes que recibieron apoyo de Icetex (Apoyo_Icetex)**
+
+    ```{sql connection = conexion1}
+    SELECT Apoyo_Icetex, COUNT(*) AS Frecuencia
+    FROM Estudiantes
+    GROUP BY Apoyo_Icetex;
+    ```
+
+5. **Promedio general en el puntaje de inglés (Puntaje_Icfes_Idioma)**
+
+    ```{sql connection = conexion1}
+    SELECT AVG(Puntaje_Icfes_Idioma) AS Promedio_Puntaje_Idioma
+    FROM Estudiantes;
+    ```
+
+6. **Puntaje promedio en matemáticas (Puntaje_Icfes_Matemáticas)**
+
+    ```{sql connection = conexion1}
+    SELECT AVG(Puntaje_Icfes_Matemáticas) AS Promedio_Puntaje_Matemáticas
+    FROM Estudiantes;
+    ```
+
+7. **Puntaje promedio en sociales y ciudadanas (Puntaje_Icfes_Sociales_y_ciudadanas)**
+
+    ```{sql connection = conexion1}
+    SELECT AVG(Puntaje_Icfes_Sociales_y_ciudadanas) AS Promedio_Puntaje_Sociales
+    FROM Estudiantes;
+    ```
+
+8. **Puntaje promedio en ciencias naturales (Puntaje_Icfes_Ciencias_naturales)**
+
+    ```{sql connection = conexion1}
+    SELECT AVG(Puntaje_Icfes_Ciencias_naturales) AS Promedio_Puntaje_Ciencias
+    FROM Estudiantes;
+    ```
+
+9. **Puntaje promedio en lectura crítica (Puntaje_Icfes_Lectura_crítica)**
+
+    ```{sql connection = conexion1}
+    SELECT AVG(Puntaje_Icfes_Lectura_crítica) AS Promedio_Puntaje_Lectura
+    FROM Estudiantes;
+    ```
+
+### f. Promedio del puntaje global por fecha de corte (Cohorte_Ingreso)
+
+```{sql connection = conexion1}
+SELECT Cohorte_Ingreso, AVG(Icfes_Puntaje_global) AS Promedio_Puntaje_Global
+FROM Estudiantes
+GROUP BY Cohorte_Ingreso;
+```
+
+### 4. Puntaje máximo y mínimo global por cada programa
+
+
+```{sql connection = conexion1}
+SELECT Programa, MAX(Icfes_Puntaje_global) AS Puntaje_Maximo, MIN(Icfes_Puntaje_global) AS Puntaje_Minimo
+FROM Estudiantes
+GROUP BY Programa;
+```
+
+### 5. Tabla de frecuencia por programa para la variable de deserción (Respuesta)
+
+```{sql connection = conexion1}
+SELECT Programa, Respuesta, COUNT(*) AS Frecuencia
+FROM Estudiantes
+GROUP BY Programa, Respuesta;
+```
+
+
+
+
+
+
