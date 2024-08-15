@@ -47,63 +47,51 @@ knitr::opts_chunk$set(connection = conexion1)
 ```
 
 
-```{r}
-library(csv)
-df <- read.csv("C://Users//Estudiantes//Videos//Desercion.csv", fileEncoding = "UTF-8", header = T, sep = ";")
-file.choose()
-
-write.csv(df, "archivo_corregido.csv", fileEncoding = "UTF-8", row.names = FALSE)
-
-```
-
-
-
 
 ```{sql connection= conexion1, eval = FALSE}
 
-CREATE TABLE Estudiantes6 (
-    Codigo_Estudiante INT PRIMARY KEY,
+CREATE TABLE Estudiantes (
+    Codigo_Estudiante TEXT,
     Edad_Ingreso INT,
-    Genero CHAR(1),
-    Estado_Civil VARCHAR(20),
+    Genero CHARACTER VARYING(255),
+    Estado_Civil CHARACTER VARYING(255),
     Estrato INT,
-    Ciudad_Residencia VARCHAR(100),
-    Ciudad_de_Nacimiento VARCHAR(100),
+    Ciudad_Residencia CHARACTER VARYING(255),
+    Ciudad_de_Nacimiento CHARACTER VARYING(255),
     No_Hermanos INT,
     Posicion_hermanos INT,
     No_Miembros_Flia INT,
     No_Personas_Trabaja INT,
     Persona_con_Discapacidad BOOLEAN,
-    Tipo_Discapacidad VARCHAR(100),
-    Caracter_Colegio VARCHAR(100),
+    Tipo_Discapacidad CHARACTER VARYING(255),
+    Caracter_Colegio CHARACTER VARYING(255),
     Edad_Icfes INT,
-    Edu_Madre VARCHAR(100),
+    Edu_Madre CHARACTER VARYING(255),
     Vivienda_Propia BOOLEAN,
     Apoyo_Financiero BOOLEAN,
     Apoyo_economico BOOLEAN,
     Apoyo_Icetex BOOLEAN,
-    Puntaje_Icfes_Idioma DECIMAL(5, 2),
-    Puntaje_Icfes_Matematicas DECIMAL(5, 2),
-    Puntaje_Icfes_Sociales_y_ciudadanas DECIMAL(5, 2),
-    Puntaje_Icfes_Ciencias_naturales DECIMAL(5, 2),
-    Puntaje_Icfes_Lectura_critica DECIMAL(5, 2),
-    Icfes_Puntaje_global DECIMAL(5, 2),
-    Cohorte_Ingreso VARCHAR(20),
+    Puntaje_Icfes_Idioma NUMERIC,
+    Puntaje_Icfes_Matematicas NUMERIC,
+    Puntaje_Icfes_Sociales_y_ciudadanas NUMERIC,
+    Puntaje_Icfes_Ciencias_naturales NUMERIC,
+    Puntaje_Icfes_Lectura_critica NUMERIC,
+    Icfes_Puntaje_global NUMERIC,
+    Cohorte_Ingreso CHARACTER VARYING(255),
     Fecha_Ingreso DATE,
-    Facultad VARCHAR(100),
-    Programa VARCHAR(100),
+    Facultad CHARACTER VARYING(255),
+    Programa CHARACTER VARYING(255),
     Num_Materias_Matriculadas INT,
     Num_Materias_Aprobadas INT,
     Num_Materias_Matriculadas_Acumuladas INT,
     Num_Materias_Aprobadas_Acumuladas INT,
-    Porcentaje_materias_Aprobadas_Del_Total_Matriculado DECIMAL(5, 2),
-    Porcentaje_creditos_Aprobados_Del_Plan_Academico DECIMAL(5, 2),
-    Promedio_Acumulado DECIMAL(5, 2),
-    Periodo_Cohorte VARCHAR(20),
-    Estado_IES VARCHAR(50),
+    Porcentaje_materias_Aprobadas_Del_Total_Matriculado NUMERIC,
+    Porcentaje_creditos_Aprobados_Del_Plan_Academico NUMERIC,
+    Promedio_Acumulado NUMERIC,
+    Periodo_Cohorte CHARACTER VARYING(255),
+    Estado_IES CHARACTER VARYING(255),
     Respuesta TEXT
 );
-
 
 ```
 
