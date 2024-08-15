@@ -165,7 +165,7 @@ grid.arrange(plot1, plot2, ncol = 2)
 ```
 
 
-## \textcolor{blue}{Modelo Gausiano}
+## \textcolor{blue}{Modelo Gaussiano}
 
 ```{r}
 modelo_Gau <- fit.variogram(variograma, model = vgm(psill = 1, model = "Gau",
@@ -274,7 +274,6 @@ plot2 <- lzn.krigedg %>% as.data.frame %>%
 grid.arrange(plot1, plot2, ncol = 2)
 
 ```
-
 
 
 ## \textcolor{blue}{Modelo Monomico}
