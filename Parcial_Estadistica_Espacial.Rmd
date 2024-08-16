@@ -35,6 +35,7 @@ library(dplyr)
 library(spData)
 library(gstat)
 library(sp)
+library(spdep)
 
 
 library(ggplot2)
@@ -45,7 +46,152 @@ library(gridExtra)
 
 library(lattice)
 
+library(tmap)
+library(sf)
+library(tigris)
+library(viridis)
+
 ```
+
+
+```{r}
+data(columbus)  #Columbus OH spatial analysis data set 
+
+names(columbus) <- make.names(names(columbus), unique = TRUE)
+
+
+# Los datos columbus estan conformados por informacion espacial que describe una zona geografica 
+# Para este trabajo el estudio se centra en ver las distribucion espacial de los ingresos por hogares 
+# Estos ingresos estan representados en dolares americanos en la variable INC
+
+summary(columbus$INC)
+
+```
+
+```{r}
+coordenada_media <- colMeans(coordinates(columbus)); coordenada_media
+```
+
+## histograma regional para visualizar la distribución de ingresos de hogares en columbus
+
+```{r}
+plot1 <- ggplot(columbus, aes(x = INC)) + 
+  geom_histogram(binwidth = 2, fill = "#69b3a2", size = 1.5,
+                 color ="black") + 
+  labs(title = "Concentración de ingresos en hogares",
+       x = "Concentración", y = "Frecuencia") + theme_minimal()
+
+
+
+plot2 <- ggplot(columbus, aes(x = INC)) +
+  geom_density(color = "red", size = 1) +
+  labs(title = "Distribución de la household income (in 1,000 USD)",
+       x = "Tasa de household income (in 1,000 USD)",
+       y = "Densidad") +
+  theme_minimal()
+
+grid.arrange(plot1, plot2, ncol = 2)
+
+
+```
+
+## \textcolor{blue}{Mapa de cuantiles o box map}
+
+
+```{r}
+
+coordinates(columbus) <- ~X + Y
+
+columbus$lead_quantile <- cut(columbus$INC, 
+                           breaks = quantile(columbus$INC, probs = seq(0, 1, 0.25)), 
+                           include.lowest = TRUE, 
+                           labels = c("1er Cuartil", "2do Cuartil", "3er Cuartil", "4to Cuartil"))
+
+```
+
+## Mapa de Cuartiles 
+
+```{r}
+tm_shape(columbus) +
+  tm_dots(col = "lead_quantile", palette = "-RdBu", size = 0.5, title = "Cuantiles de Ingresos") +
+  tm_layout(title = "Box Map: Ingreso de Hogares")
+
+```
+
+## \textcolor{blue}{Mapa de la Distribución de ingresos por Hogares en Columbus}
+
+```{r}
+# Supongamos que columbus es tu data frame
+columbus_sf <- st_as_sf(columbus, 
+                        coords = c("X", "Y"), 
+                        crs = 4269,   # Cambia el CRS si es necesario
+                        remove = FALSE)  # Mantén las columnas originales
+```
+
+
+```{r}
+# Crear el mapa con tmap
+tm_shape(columbus_sf) +
+  tm_dots(
+    col = "INC",               # Variable para colorear los puntos
+    palette = "viridis",        # Paleta de colores
+    size = 0.5,                 # Tamaño de los puntos
+    title = "Concentracion de Ingresos",  # Título de la leyenda
+    style = "quantile",         # Cómo clasificar los datos
+    n = 5,                      # Número de clases
+    textNA = "No disponible",   # Etiqueta para valores NA
+    colorNA = "grey90",         # Color para valores NA
+    border.col = "black",       # Color del borde de los puntos
+    border.alpha = 0.8          # Transparencia del borde
+  ) +
+  tm_layout(
+    main.title = "Concentracion de Ingresos en Columbus",
+    main.title.size = 1.5,
+    legend.title.size = 1.5,
+    legend.text.size = 0.9,
+    legend.position = c("right", "bottom"),
+    frame = FALSE,
+    inner.margins = c(0.2, 0.005, 0.2, 0.25),
+    fontfamily = "sans"
+  ) +
+  tm_compass(type = "rose", position = c("right", "top")) +  # Añadir brújula
+  tm_scale_bar(position = c("left", "bottom"))  # Añadir escala gráfica
+
+
+```
+
+
+## \textcolor{blue}{modelo de varianza}
+
+```{r}
+
+variograma <- variogram(log(INC + 1) ~ 1, data = columbus);variograma
+
+```
+
+
+
+## \textcolor{blue}{Gráfico de Moran para visualizar la autocorrelación espacial para la variable INC.}
+
+```{r}
+
+# Crear la lista de vecinos y la matriz de pesos espaciales
+vecinos <- dnearneigh(coordinates(columbus), 0, 1000)
+pesos <- nb2listw(vecinos, style = "W")
+
+# Calcular el I de Moran
+moran.plot(columbus$INC, pesos, pch = 16, col = "#2b83ba", 
+           main = "Gráfico de Moran: Ingresos por Hogares")
+
+```
+
+
+
+
+
+
+
+
 
 
 
