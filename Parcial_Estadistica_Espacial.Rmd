@@ -1,0 +1,60 @@
+---
+title: \textbf{Modelos Espaciales de Variogramas}
+subtitle: Estadística Espacial
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+        - Config.txt     # Configuracion de pie, encabezado y usepackge
+---
+
+
+```{r setup, include=TRUE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+
+```{r}
+
+library(tidyverse)
+library(dplyr)
+
+library(spData)
+library(gstat)
+library(sp)
+
+
+library(ggplot2)
+
+library(scales)
+library(magrittr)
+library(gridExtra)
+
+library(lattice)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
