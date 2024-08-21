@@ -1,0 +1,167 @@
+---
+title: \textbf{Número de matriculas por carrera que presentan mayor avance de cada estudiante}
+subtitle: \textcolor{blue}{Bases de Datos}
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+         - Config.txt     # Configuracion de pie, encabezado y usepackge
+  
+---
+
+
+```{r setup, include=FALSE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+```{r}
+library(RPostgres)
+library(DBI)
+library(RSQLite)
+```
+
+
+```{r}
+# Parámetros de conexión
+usuario <- "Joanurp"
+contraseña <- "..."  
+host <- "localhost"
+puerto <- 5432
+basedatos <- "Trabajos"
+```
+
+
+```{r}
+# Crear el comando psql para ejecutar una consulta
+comando <- paste(
+  "PGPASSWORD=", contraseña, " psql -U", usuario, "-h", host, "-p", puerto, "-d", basedatos, "-c \"",
+  "SELECT version();", 
+  "\"", sep = ""
+)
+
+# Ejecutar el comando
+system(comando)
+```
+
+
+```{r}
+# Otorgar permisos de creación de base de datos
+comando_permisos <- paste(
+  "PGPASSWORD=", contraseña, " psql -U postgres -h", host, "-p", puerto, "-c \"",
+  "ALTER USER", usuario, "CREATEDB;",
+  "\"", sep = ""
+)
+system(comando_permisos)
+```
+
+
+```{r}
+# Crear una nueva base de datos
+comando_base_datos <- paste(
+  "PGPASSWORD=", contraseña, " psql -U postgres -h", host, "-p", puerto, "-c \"",
+  "CREATE DATABASE CTrabajos WITH OWNER =", usuario, ";",
+  "\"", sep = ""
+)
+system(comando_base_datos)
+
+
+```
+
+
+```{r}
+# Crear la conexión utilizando RPostgres
+conexion <- dbConnect(RPostgres::Postgres(), dbname = "Trabajos",
+                      host = "localhost",
+                      port = 5432,
+                      user = "Joanurp",
+                      password = "...")
+
+
+knitr::opts_chunk$set(connection = conexion)
+
+```
+
+
+
+```{r}
+library(csv)
+library(dplyr)
+```
+
+
+```{r}
+
+#write.csv(df, "", row.names = FALSE, na = "NULL")
+
+
+data <- read.csv("C://Users//Estudiantes//Videos//Data_Clases_Unal//Data_estudiantes_Unal.csv",
+                 header = T, sep = ";")
+data<-data %>% mutate(across(everything(), ~ ifelse(is.na(.), "NULL", .)))
+
+df <- data
+
+```
+
+
+```{r}
+
+df$AVANCE_CARRERA <- as.numeric(gsub(",", ".", df$AVANCE_CARRERA))
+df$PAPA <- as.numeric(gsub(",", ".", df$PAPA))
+df$PROME_ACADE <- as.numeric(gsub(",", ".", df$PROME_ACADE))
+df$PBM_CALCULADO <- as.numeric(gsub(",", ".", df$PBM_CALCULADO))
+
+
+```
+
+
+## Objetivo Especifico
+
+Determinar cual es el número de matriculas por carrera que presentan mayor avance de cada estudiante 
+
+
+
+```{r}
+
+library(sqldf)
+
+resultado <- sqldf("
+SELECT 
+    T_DOCUMENTO,
+    COD_PLAN,
+    NUMERO_MATRICULAS,
+    AVANCE_CARRERA
+FROM (
+    SELECT 
+        T_DOCUMENTO,
+        COD_PLAN,
+        NUMERO_MATRICULAS,
+        AVANCE_CARRERA,
+        ROW_NUMBER() OVER (PARTITION BY T_DOCUMENTO, COD_PLAN ORDER BY AVANCE_CARRERA DESC) AS rn
+    FROM df
+)
+WHERE rn = 1
+"); resultado
+
+```
+
+
+
+
+
+
+
+
+
