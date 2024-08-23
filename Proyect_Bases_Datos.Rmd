@@ -1,5 +1,5 @@
 ---
-title: \textbf{Número de matriculas por carrera que presentan mayor avance de cada estudiante}
+title: \textbf{Análisis de Caracteristicas Socióeconomicas Saber - 11}
 subtitle: \textcolor{blue}{Bases de Datos}
 author: "Jose Angel Urquijo Parra"
 date: \today
@@ -30,63 +30,15 @@ knitr::opts_chunk$set(
 ```{r}
 library(RPostgres)
 library(DBI)
-library(RSQLite)
-```
-
-
-```{r}
-# Parámetros de conexión
-usuario <- "Joanurp"
-contraseña <- "..."  
-host <- "localhost"
-puerto <- 5432
-basedatos <- "Trabajos"
-```
-
-
-```{r}
-# Crear el comando psql para ejecutar una consulta
-comando <- paste(
-  "PGPASSWORD=", contraseña, " psql -U", usuario, "-h", host, "-p", puerto, "-d", basedatos, "-c \"",
-  "SELECT version();", 
-  "\"", sep = ""
-)
-
-# Ejecutar el comando
-system(comando)
-```
-
-
-```{r}
-# Otorgar permisos de creación de base de datos
-comando_permisos <- paste(
-  "PGPASSWORD=", contraseña, " psql -U postgres -h", host, "-p", puerto, "-c \"",
-  "ALTER USER", usuario, "CREATEDB;",
-  "\"", sep = ""
-)
-system(comando_permisos)
-```
-
-
-```{r}
-# Crear una nueva base de datos
-comando_base_datos <- paste(
-  "PGPASSWORD=", contraseña, " psql -U postgres -h", host, "-p", puerto, "-c \"",
-  "CREATE DATABASE CTrabajos WITH OWNER =", usuario, ";",
-  "\"", sep = ""
-)
-system(comando_base_datos)
-
-
 ```
 
 
 ```{r}
 # Crear la conexión utilizando RPostgres
-conexion <- dbConnect(RPostgres::Postgres(), dbname = "Trabajos",
+conexion <- dbConnect(RPostgres::Postgres(), dbname = "Proyect",
                       host = "localhost",
                       port = 5432,
-                      user = "Joanurp",
+                      user = "postgres",
                       password = "...")
 
 
@@ -95,69 +47,249 @@ knitr::opts_chunk$set(connection = conexion)
 ```
 
 
+```{sql connection= conexion, eval = FALSE}
+CREATE TABLE saber11_2019 (
+    ESTU_TIPODOCUMENTO CHARACTER VARYING(255),
+    ESTU_NACIONALIDAD CHARACTER VARYING(255),
+    ESTU_GENERO CHARACTER VARYING(255),
+    ESTU_FECHANACIMIENTO DATE,
+    PERIODO CHARACTER VARYING(255),
+    ESTU_CONSECUTIVO CHARACTER VARYING(255),
+    ESTU_ESTUDIANTE CHARACTER VARYING(255),
+    ESTU_TIENEETNIA CHARACTER VARYING(255),
+    ESTU_PAIS_RESIDE CHARACTER VARYING(255),
+    ESTU_ETNIA CHARACTER VARYING(255),
+    ESTU_DEPTO_RESIDE CHARACTER VARYING(255),
+    ESTU_COD_RESIDE_DEPTO CHARACTER VARYING(255),
+    ESTU_MCPIO_RESIDE CHARACTER VARYING(255),
+    ESTU_COD_RESIDE_MCPIO CHARACTER VARYING(255),
+    FAMI_ESTRATOVIVIENDA CHARACTER VARYING(255),
+    FAMI_PERSONASHOGAR CHARACTER VARYING(255),
+    FAMI_CUARTOSHOGAR CHARACTER VARYING(255),
+    FAMI_EDUCACIONPADRE CHARACTER VARYING(255),
+    FAMI_EDUCACIONMADRE CHARACTER VARYING(255),
+    FAMI_TRABAJOLABORPADRE CHARACTER VARYING(255),
+    FAMI_TRABAJOLABORMADRE CHARACTER VARYING(255),
+    FAMI_TIENEINTERNET CHARACTER VARYING(255),
+    FAMI_TIENESERVICIOTV CHARACTER VARYING(255),
+    FAMI_TIENECOMPUTADOR CHARACTER VARYING(255),
+    FAMI_TIENELAVADORA CHARACTER VARYING(255),
+    FAMI_TIENEHORNOMICROOGAS CHARACTER VARYING(255),
+    FAMI_TIENEAUTOMOVIL CHARACTER VARYING(255),
+    FAMI_TIENEMOTOCICLETA CHARACTER VARYING(255),
+    FAMI_TIENECONSOLAVIDEOJUEGOS CHARACTER VARYING(255),
+    FAMI_NUMLIBROS CHARACTER VARYING(255),
+    FAMI_COMELECHEDERIVADOS CHARACTER VARYING(255),
+    FAMI_COMECARNEPESCADOHUEVO CHARACTER VARYING(255),
+    FAMI_COMECEREALFRUTOSLEGUMBRE CHARACTER VARYING(255),
+    FAMI_SITUACIONECONOMICA CHARACTER VARYING(255),
+    ESTU_DEDICACIONLECTURADIARIA CHARACTER VARYING(255),
+    ESTU_DEDICACIONINTERNET CHARACTER VARYING(255),
+    ESTU_HORASSEMANATRABAJA CHARACTER VARYING(255),
+    ESTU_TIPOREMUNERACION CHARACTER VARYING(255),
+    COLE_CODIGO_ICFES CHARACTER VARYING(255),
+    COLE_COD_DANE_ESTABLECIMIENTO CHARACTER VARYING(255),
+    COLE_NOMBRE_ESTABLECIMIENTO CHARACTER VARYING(255),
+    COLE_GENERO CHARACTER VARYING(255),
+    COLE_NATURALEZA CHARACTER VARYING(255),
+    COLE_CALENDARIO CHARACTER VARYING(255),
+    COLE_BILINGUE CHARACTER VARYING(255),
+    COLE_CARACTER CHARACTER VARYING(255),
+    COLE_COD_DANE_SEDE CHARACTER VARYING(255),
+    COLE_NOMBRE_SEDE CHARACTER VARYING(255),
+    COLE_SEDE_PRINCIPAL CHARACTER VARYING(255),
+    COLE_AREA_UBICACION CHARACTER VARYING(255),
+    COLE_JORNADA CHARACTER VARYING(255),
+    COLE_COD_MCPIO_UBICACION CHARACTER VARYING(255),
+    COLE_MCPIO_UBICACION CHARACTER VARYING(255),
+    COLE_COD_DEPTO_UBICACION CHARACTER VARYING(255),
+    COLE_DEPTO_UBICACION CHARACTER VARYING(255),
+    ESTU_PRIVADO_LIBERTAD CHARACTER VARYING(255),
+    ESTU_COD_MCPIO_PRESENTACION CHARACTER VARYING(255),
+    ESTU_MCPIO_PRESENTACION CHARACTER VARYING(255),
+    ESTU_DEPTO_PRESENTACION CHARACTER VARYING(255),
+    ESTU_COD_DEPTO_PRESENTACION CHARACTER VARYING(255),
+    PUNT_LECTURA_CRITICA NUMERIC,
+    PERCENTIL_LECTURA_CRITICA NUMERIC,
+    DESEMP_LECTURA_CRITICA CHARACTER VARYING(255),
+    PUNT_MATEMATICAS NUMERIC,
+    PERCENTIL_MATEMATICAS NUMERIC,
+    DESEMP_MATEMATICAS CHARACTER VARYING(255),
+    PUNT_C_NATURALES NUMERIC,
+    PERCENTIL_C_NATURALES NUMERIC,
+    DESEMP_C_NATURALES CHARACTER VARYING(255),
+    PUNT_SOCIALES_CIUDADANAS NUMERIC,
+    PERCENTIL_SOCIALES_CIUDADANAS NUMERIC,
+    DESEMP_SOCIALES_CIUDADANAS CHARACTER VARYING(255),
+    PUNT_INGLES NUMERIC,
+    PERCENTIL_INGLES NUMERIC,
+    DESEMP_INGLES CHARACTER VARYING(255),
+    PUNT_GLOBAL NUMERIC,
+    PERCENTIL_GLOBAL NUMERIC,
+    ESTU_INSE_INDIVIDUAL CHARACTER VARYING(255),
+    ESTU_NSE_INDIVIDUAL CHARACTER VARYING(255),
+    ESTU_NSE_ESTABLECIMIENTO CHARACTER VARYING(255),
+    ESTU_ESTADOINVESTIGACION CHARACTER VARYING(255),
+    ESTU_GENERACION_E CHARACTER VARYING(255)
+);
 
-```{r}
-library(csv)
-library(dplyr)
 ```
 
 
-```{r}
+### 1. **Distribución de Puntajes por Área y Género**
 
-#write.csv(df, "", row.names = FALSE, na = "NULL")
+Esta consulta muestra la distribución media de los puntajes por área de conocimiento (`PUNT_LECTURA_CRITICA`, `PUNT_MATEMATICAS`, etc.) segregada por género.
 
-
-data <- read.csv("C://Users//Estudiantes//Videos//Data_Clases_Unal//Data_estudiantes_Unal.csv",
-                 header = T, sep = ";")
-data<-data %>% mutate(across(everything(), ~ ifelse(is.na(.), "NULL", .)))
-
-df <- data
-
-```
-
-
-```{r}
-
-df$AVANCE_CARRERA <- as.numeric(gsub(",", ".", df$AVANCE_CARRERA))
-df$PAPA <- as.numeric(gsub(",", ".", df$PAPA))
-df$PROME_ACADE <- as.numeric(gsub(",", ".", df$PROME_ACADE))
-df$PBM_CALCULADO <- as.numeric(gsub(",", ".", df$PBM_CALCULADO))
-
-
-```
-
-
-## Objetivo Especifico
-
-Determinar cual es el número de matriculas por carrera que presentan mayor avance de cada estudiante 
-
-
-
-```{r}
-
-library(sqldf)
-
-resultado <- sqldf("
+```{sql connection = conexion}
 SELECT 
-    T_DOCUMENTO,
-    COD_PLAN,
-    NUMERO_MATRICULAS,
-    AVANCE_CARRERA
-FROM (
-    SELECT 
-        T_DOCUMENTO,
-        COD_PLAN,
-        NUMERO_MATRICULAS,
-        AVANCE_CARRERA,
-        ROW_NUMBER() OVER (PARTITION BY T_DOCUMENTO, COD_PLAN ORDER BY AVANCE_CARRERA DESC) AS rn
-    FROM df
-)
-WHERE rn = 1
-"); resultado
-
+    ESTU_GENERO,
+    AVG(PUNT_LECTURA_CRITICA) AS avg_lectura_critica,
+    AVG(PUNT_MATEMATICAS) AS avg_matematicas,
+    AVG(PUNT_C_NATURALES) AS avg_c_naturales,
+    AVG(PUNT_SOCIALES_CIUDADANAS) AS avg_sociales_ciudadanas,
+    AVG(PUNT_INGLES) AS avg_ingles,
+    AVG(PUNT_GLOBAL) AS avg_global
+FROM 
+    saber11_2019
+GROUP BY 
+    ESTU_GENERO;
 ```
 
+### 2. **Impacto de la Estratificación Socioeconómica en los Puntajes**
 
+Analiza cómo el estrato de vivienda (`FAMI_ESTRATOVIVIENDA`) afecta los puntajes en diferentes áreas.
+
+```{sql connection = conexion}
+SELECT 
+    FAMI_ESTRATOVIVIENDA,
+    AVG(PUNT_LECTURA_CRITICA) AS avg_lectura_critica,
+    AVG(PUNT_MATEMATICAS) AS avg_matematicas,
+    AVG(PUNT_C_NATURALES) AS avg_c_naturales,
+    AVG(PUNT_SOCIALES_CIUDADANAS) AS avg_sociales_ciudadanas,
+    AVG(PUNT_INGLES) AS avg_ingles,
+    AVG(PUNT_GLOBAL) AS avg_global
+FROM 
+    saber11_2019
+GROUP BY 
+    FAMI_ESTRATOVIVIENDA
+ORDER BY 
+    FAMI_ESTRATOVIVIENDA;
+```
+
+### 3. **Comparación de Puntajes por Tipo de Establecimiento Educativo**
+
+Compara los puntajes promedio en cada área según el tipo de establecimiento educativo (`COLE_NATURALEZA`).
+
+```{sql connection = conexion}
+SELECT 
+    COLE_NATURALEZA,
+    AVG(PUNT_LECTURA_CRITICA) AS avg_lectura_critica,
+    AVG(PUNT_MATEMATICAS) AS avg_matematicas,
+    AVG(PUNT_C_NATURALES) AS avg_c_naturales,
+    AVG(PUNT_SOCIALES_CIUDADANAS) AS avg_sociales_ciudadanas,
+    AVG(PUNT_INGLES) AS avg_ingles,
+    AVG(PUNT_GLOBAL) AS avg_global
+FROM 
+    saber11_2019
+GROUP BY 
+    COLE_NATURALEZA
+ORDER BY 
+    COLE_NATURALEZA;
+```
+
+### 4. **Correlación entre la Dedicación Diaria a la Lectura y el Puntaje Global**
+
+Investiga si hay una correlación significativa entre el tiempo dedicado a la lectura diaria (`ESTU_DEDICACIONLECTURADIARIA`) y el puntaje global (`PUNT_GLOBAL`).
+
+```{sql connection = conexion}
+SELECT 
+    ESTU_DEDICACIONLECTURADIARIA,
+    AVG(PUNT_GLOBAL) AS avg_puntaje_global
+FROM 
+    saber11_2019
+GROUP BY 
+    ESTU_DEDICACIONLECTURADIARIA
+ORDER BY 
+    ESTU_DEDICACIONLECTURADIARIA;
+```
+
+### 5. **Puntajes Promedio por Departamento de Residencia**
+
+Compara los puntajes promedio en cada área de conocimiento según el departamento de residencia (`ESTU_DEPTO_RESIDE`).
+
+```{sql connection = conexion}
+SELECT 
+    ESTU_DEPTO_RESIDE,
+    AVG(PUNT_LECTURA_CRITICA) AS avg_lectura_critica,
+    AVG(PUNT_MATEMATICAS) AS avg_matematicas,
+    AVG(PUNT_C_NATURALES) AS avg_c_naturales,
+    AVG(PUNT_SOCIALES_CIUDADANAS) AS avg_sociales_ciudadanas,
+    AVG(PUNT_INGLES) AS avg_ingles,
+    AVG(PUNT_GLOBAL) AS avg_global
+FROM 
+    saber11_2019
+GROUP BY 
+    ESTU_DEPTO_RESIDE
+ORDER BY 
+    avg_global DESC;
+```
+
+### 6. **Puntajes de Estudiantes con Acceso a Internet y Computadora**
+
+Compara el puntaje promedio entre estudiantes que tienen acceso a Internet y computadora (`FAMI_TIENESERVICIOINTERNET`, `FAMI_TIENECOMPUTADOR`).
+
+```{sql connection = conexion, eval = FALSE}
+SELECT 
+    CASE 
+        WHEN FAMI_TIENESERVICIOINTERNET = 'Sí' AND FAMI_TIENECOMPUTADOR = 'Sí' THEN 'Sí'
+        ELSE 'No'
+    END AS acceso_tecnologico,
+    AVG(PUNT_GLOBAL) AS avg_global
+FROM 
+    saber11_2019
+GROUP BY 
+    acceso_tecnologico
+ORDER BY 
+    avg_global DESC;
+```
+
+### 8. **Puntaje Promedio por Tipo de Colegio**
+
+Compara los puntajes según el tipo de colegio (`COLE_CARACTER`).
+
+```{sql connection = conexion}
+SELECT 
+    COLE_CARACTER,
+    AVG(PUNT_LECTURA_CRITICA) AS avg_lectura_critica,
+    AVG(PUNT_MATEMATICAS) AS avg_matematicas,
+    AVG(PUNT_C_NATURALES) AS avg_c_naturales,
+    AVG(PUNT_SOCIALES_CIUDADANAS) AS avg_sociales_ciudadanas,
+    AVG(PUNT_INGLES) AS avg_ingles,
+    AVG(PUNT_GLOBAL) AS avg_global
+FROM 
+    saber11_2019
+GROUP BY 
+    COLE_CARACTER
+ORDER BY 
+    COLE_CARACTER;
+```
+
+### 9. **Distribución de Puntajes Globales por Nacionalidad**
+
+Analiza la distribución de los puntajes globales (`PUNT_GLOBAL`) según la nacionalidad (`ESTU_NACIONALIDAD`).
+
+```{sql connection= conexion}
+SELECT 
+    ESTU_NACIONALIDAD,
+    AVG(PUNT_GLOBAL) AS avg_global,
+    COUNT(*) AS num_estudiantes
+FROM 
+    saber11_2019
+GROUP BY 
+    ESTU_NACIONALIDAD
+ORDER BY 
+    avg_global DESC;
+```
 
 
 
