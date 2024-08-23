@@ -1,0 +1,1294 @@
+---
+title: \textbf{Análisis de Modelos Espaciales}
+subtitle: \textcolor{blue}{Asig. Estadística Espacial}
+author: "Marieth Agnes, Idalia Hernandez, Jose Angel Urquijo"
+date: \today
+
+output: 
+  pdf_document:
+    includes:
+      in_header:
+         - Config.txt     # Configuracion de pie, encabezado y usepackge
+  
+---
+
+
+```{r setup, include=FALSE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+# librerias
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", collapse=FALSE, eval=TRUE}
+library(automap)
+library(reshape2)
+library(GWmodel)
+library(SpatialRegimes)
+library(spatialreg)
+library(tmap)
+library(tigris)
+library(dplyr)
+library(sp)
+library(scales)
+library(spData)
+library(spdep)
+library(gstat)
+library(ggplot2)
+library(raster)
+library(viridis)
+library(leaflet)
+library(sf)
+library(gstat)
+
+```
+
+# Data
+
+El conjunto de datos **Jura** es un dataset ampliamente utilizado en geoestadística, extraído del libro de Pierre Goovaerts. Este conjunto de datos incluye varias tablas (`data.frames`) que se utilizan para la predicción y validación de la distribución espacial de metales pesados en el suelo, así como para análisis de transectos y generación de cuadrículas para interpolaciones.
+
+```{r}
+
+data(jura)
+dim(jura.pred)
+head(jura.pred)
+
+jura_df <-  as.data.frame(jura.pred)
+
+```
+
+
+### Descripción de los Componentes del Conjunto de Datos
+
+- **Xloc**: Coordenada X en un sistema de cuadrícula local (en kilómetros).
+- **Yloc**: Coordenada Y en un sistema de cuadrícula local (en kilómetros).
+- **Landuse**: Uso del suelo, categorizado de acuerdo con la descripción en el libro de Goovaerts.
+- **Rock**: Tipo de roca, también categorizado según el libro.
+- **Cd**: Concentración de cadmio en el suelo superior, medida en miligramos por kilogramo.
+- **Co**: Concentración de cobalto en el suelo superior, medida en miligramos por kilogramo.
+- **Cr**: Concentración de cromo en el suelo superior, medida en miligramos por kilogramo.
+- **Cu**: Concentración de cobre en el suelo superior, medida en miligramos por kilogramo.
+- **Ni**: Concentración de níquel en el suelo superior, medida en miligramos por kilogramo.
+- **Pb**: Concentración de plomo en el suelo superior, medida en miligramos por kilogramo.
+- **Zn**: Concentración de zinc en el suelo superior, medida en miligramos por kilogramo.
+
+
+
+ **juragrid.dat**
+- **Xloc**: Coordenada X en un sistema de cuadrícula local (en kilómetros).
+- **Yloc**: Coordenada Y en un sistema de cuadrícula local (en kilómetros).
+- **Landuse**: Uso del suelo.
+- **Rock**: Tipo de roca.
+- **long**: Longitud en el sistema de coordenadas geográficas (datum WGS84).
+- **lat**: Latitud en el sistema de coordenadas geográficas (datum WGS84).
+
+
+Este conjunto de datos es útil para realizar interpolaciones espaciales y análisis geoestadísticos, como Kriging. Las variables espaciales (`Xloc`, `Yloc`, `long`, `lat`) permiten trabajar tanto en sistemas de coordenadas locales como en sistemas de coordenadas geográficas. Además, la información sobre el uso del suelo y el tipo de roca proporciona un contexto adicional que puede ser importante para entender la distribución de los metales pesados en el suelo.
+
+
+
+# Descriptiva
+```{r}
+summary(jura.pred)
+
+```
+El análisis descriptivo de las variables en el conjunto de datos `jura.pred` nos  proporciona una visión general de la distribución espacial de las coordenadas, el uso del suelo, los tipos de roca y las concentraciones de metales pesados en el área de estudio. 
+
+### Coordenadas Espaciales (`Xloc`, `Yloc`, `long`, `lat`)
+- **Xloc (km)** y **Yloc (km)**: Estas variables representan las coordenadas en una cuadrícula local en kilómetros. Los valores se distribuyen entre 0.626 y 4.920 km en el eje X, y entre 0.580 y 5.690 km en el eje Y. La media de `Xloc` es 2.980 km y la de `Yloc` es 2.665 km, lo que sugiere una cobertura espacial uniforme en la región estudiada.
+- **long** y **lat**: Estas variables representan las coordenadas geográficas (longitud y latitud) en el sistema de referencia WGS84. La longitud varía entre 6.828 y 6.884 grados, y la latitud entre 47.12 y 47.16 grados. Esto indica un área relativamente pequeña y localizada dentro de la región de Jura, Suiza.
+
+### Uso del Suelo (`Landuse`)
+- **Landuse**: El uso del suelo se clasifica en cuatro categorías: Bosque (`Forest`), Pastizal (`Pasture`), Pradera (`Meadow`) y Cultivo (`Tillage`). La mayoría de las muestras provienen de praderas (165) y pastizales (56), seguidas por bosques (33) y un número muy reducido de cultivos (5). Esto indica que el área está dominada por praderas y pastizales.
+
+### Tipo de Roca (`Rock`)
+- **Rock**: Esta variable clasifica el tipo de roca en cinco categorías: Argovian, Kimmeridgian, Sequanian, Portlandian y Cuaternario. Las rocas `Kimmeridgian` (85 muestras) y `Sequanian` (63 muestras) son las más comunes, seguidas de `Argovian` (53 muestras) y `Cuaternario` (55 muestras). La `Portlandian` es la menos representada con solo 3 muestras.
+
+### Concentración de Metales Pesados
+
+- **Cd (Cadmio)**: Las concentraciones de cadmio varían entre 0.1350 mg/kg y 5.1290 mg/kg, con una media de 1.3091 mg/kg. Esto indica una dispersión moderada de cadmio en el área.
+- **Co (Cobalto)**: Las concentraciones de cobalto oscilan entre 1.552 mg/kg y 17.720 mg/kg, con una media de 9.303 mg/kg, lo que sugiere una distribución uniforme pero con algunos valores altos.
+- **Cr (Cromo)**: Las concentraciones de cromo van de 8.72 mg/kg a 67.60 mg/kg, con una media de 35.07 mg/kg, lo que indica que es un metal más abundantemente presente en el área.
+- **Cu (Cobre)**: Las concentraciones de cobre oscilan entre 3.96 mg/kg y 166.40 mg/kg, con una media de 23.73 mg/kg. Hay algunos valores extremadamente altos, lo que indica posibles puntos calientes de contaminación.
+- **Ni (Níquel)**: Las concentraciones de níquel varían entre 4.20 mg/kg y 53.20 mg/kg, con una media de 19.73 mg/kg.
+- **Pb (Plomo)**: Las concentraciones de plomo oscilan entre 18.96 mg/kg y 229.56 mg/kg, con una media de 53.92 mg/kg. Hay una dispersión significativa, indicando que algunas áreas pueden estar particularmente afectadas por el plomo.
+- **Zn (Zinc)**: Las concentraciones de zinc van de 25.20 mg/kg a 219.32 mg/kg, con una media de 75.08 mg/kg. Esto sugiere que el zinc es también un contaminante relevante en la región.
+
+
+Este análisis muestra que el área de estudio tiene una distribución variada de uso del suelo y tipos de roca, con una gama de concentraciones de metales pesados. Las diferencias en las concentraciones de metales pesados, especialmente en el caso del cobre, plomo y zinc, sugieren la presencia de posibles fuentes de contaminación y la necesidad de un análisis más profundo utilizando técnicas de geoestadística, como el Kriging o la autoregresión espacial, para identificar patrones y áreas de riesgo potencial.
+
+
+## Histograma
+
+```{r}
+
+metales <- jura.pred[, c("Cd", "Co", "Cr", "Cu", "Ni", "Pb", "Zn")]
+
+# Transformar los datos en formato largo para ggplot2
+metales_melt <- melt(metales)
+
+# Crear un histograma para cada metal
+ggplot(metales_melt, aes(x = value)) +
+  geom_histogram(binwidth = 0.5, fill = "skyblue", color = "black") +
+  facet_wrap(~ variable, scales = "free_x") +
+  labs(title = "Histogramas de Metales Pesados", x = "Concentración (mg/kg)", y = "Frecuencia") +
+  theme_minimal()
+
+
+```
+
+1. **Distribución de los Metales Pesados**:
+
+   - **Cadmio (Cd)**: La distribución del cadmio muestra una tendencia hacia concentraciones bajas, con la mayoría de los valores situados en el rango de 0.5 a 2 mg/kg. Sin embargo, existen algunos valores atípicos que alcanzan hasta 5 mg/kg, lo que podría indicar áreas localizadas de mayor contaminación.
+   - **Plomo (Pb)**: El plomo presenta una distribución con una tendencia hacia concentraciones bajas, con concentraciones que varían significativamente desde alrededor de 20 mg/kg hasta más de 100 mg/kg. 
+   - **Cobre (Cu), níquel (Ni) y Zinc (Zn)**: Estos metales muestran una distribución hacia la izquierda ue sugiere valores bajos de estos metales
+
+   - **Cromo (Cr) y  cobalto (co)**: Estos dos metales presenta una distribución más dispersa, con concentraciones que varían significativamente. Esto sugiere la posibilidad de fuentes de contaminación significativas en ciertas áreas.
+   
+   
+## Grafico de caja
+
+Normalizamos los datos 
+```{r}
+metales <- jura.pred[, c("Cd", "Co", "Cr", "Cu", "Ni", "Pb", "Zn")]
+# Estandarizar los datos
+metales_estandarizados <- as.data.frame(scale(metales))
+
+# Transformar los datos estandarizados a formato largo para ggplot2
+metales_melt_estandarizados <-melt(metales_estandarizados)
+
+# Crear el gráfico de caja
+ggplot(metales_melt_estandarizados, aes(x = variable, y = value, fill = variable)) +
+  geom_boxplot(color = "black") +
+  labs(title = "Distribución Estandarizada de Metales Pesados", x = "Metales", y = "Concentración Estandarizada (z-score)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+Este gráfico de caja (boxplot) muestra la distribución estandarizada de las concentraciones de varios metales pesados (Cd, Co, Cr, Cu, Ni, Pb, Zn) 
+
+ **Valores Atípicos**:
+   - Los puntos fuera de los "bigotes" (líneas que se extienden desde la caja) son **valores atípicos**. Estos son valores que se encuentran a una distancia considerable del resto de los datos.
+   - Se observa que los metales como Cd,Cu,Pb y Zn tienen un número considerable de valores atípicos, lo que indica que hay muestras con concentraciones significativamente diferentes de la media.
+
+   - **Cd (Cadmio)**: Presenta una distribución relativamente alta con demasiados valores extremos, lo que sugiere una variabilidad alta en las concentraciones.
+   - **Co (Cobalto)** y **Cr (Cromo)**: Muestran una distribución similar, con algunas concentraciones ligeramente más altas que la mediana pero con pocos valores atípicos extremos.
+   - **Cu (Cobre)**: La caja para el cobre es bastante estrecha, lo que indica que la mayoría de las concentraciones de cobre están muy cerca de la mediana, con demasiados valores atípicos.
+   - **Ni (Níquel)**: Presenta una caja más alargada y pocos valores atípicos por encima de los bigotes, sugiriendo una mayor variabilidad en las concentraciones de níquel.
+   - **Pb (Plomo)**: También muestra una baja variabilidad, con una caja algo estrecha y varios valores atípicos hacia el extremo superior.
+   - **Zn (Zinc)**: Aunque la mediana y el rango intercuartil parecen ser moderados, tiene una alta cantidad de valores atípicos, lo que sugiere concentraciones muy diversas de zinc en diferentes muestras.
+
+El gráfico de caja muestra que las concentraciones de metales pesados varían considerablemente en el conjunto de datos.
+   - Metales como Cd y zn presentan una mayor dispersión y valores atípicos, lo que puede ser indicativo de fuentes de contaminación o variabilidad natural en las muestras.
+   - Co parece tener una distribución más uniforme y menos valores extremos, lo que podría indicar una fuente más constante o menos variabilidad en su presencia.
+
+
+## Variable de interes
+   
+**Objetivos**: 
+
+- Identificar áreas con concentraciones peligrosas de metales pesados que puedan representar un riesgo para la salud pública.
+
+- Desarrollar modelos predictivos que identifiquen áreas de alto riesgo de contaminación basados en datos espaciales y características del entorno.
+
+**Métodos**: 
+
+Utilizar análisis de Kriging para crear mapas de "puntos críticos" de concentración alta de metales. para establecer umbrales de contaminación, Identificando "zonas calientes" de alta concentración de cobalto (Co) que son metales tóxicos y preocupantes para la salud humana.
+
+Los modelos de autoregresión espacial (SAR, CAR, etc.) pueden utilizarse para predecir la concentración de contaminantes en áreas no muestreadas considerando la influencia de áreas cercanas y variables explicativas como el uso del suelo, la topografía y el tipo de roca. Este enfoque puede anticipar y mapear "zonas calientes" potenciales antes de que se realicen mediciones directas, permitiendo una planificación más proactiva en salud pública.
+
+Nuestro trabajo se centrara en la variable **Cobalto** ya que esta presenta mayr variabilidad ademas que en el boxplot pudimos observar la ausencia de posibles datos atipicos lo que nos sugiere que no existe muestra de concentraciones de cobalto extraordinariamente altas, lo que se nos parece una variable interesante de estudiar.
+
+El cobalto (Co) es un elemento químico que se encuentra de manera natural en la corteza terrestre y es esencial en pequeñas cantidades para la salud humana, ya que es un componente clave de la vitamina B12, necesaria para la producción de glóbulos rojos y el funcionamiento adecuado del sistema nervioso. Sin embargo, a concentraciones elevadas, el cobalto puede representar riesgos significativos para la salud y el medio ambiente.
+
+
+
+## patrones y tendencias.
+
+
+### Histograma regional
+```{r}
+ggplot(jura_df, aes(x = Co)) +
+  geom_histogram(binwidth = 2, fill = "skyblue", color = "black") +
+  labs(title = "Histograma de Las concentraciones de cobalto",
+       x = "Concentraciones de cobalto",
+       y = "Frecuencia") +
+  theme_minimal()
+
+
+```
+
+podemos observar que la distribucion no se concentra ni a la derecha ni a la izquierda lo que nos sugiere concentraciones de cobalto muestradas son variadas.
+
+Este patrón podría reflejar diferentes fuentes de contaminación, variabilidad en las condiciones ambientales, o distintos procesos geológicos que afectan las concentraciones de este metal en el área de estudio."
+
+
+### Análisis de correlación
+
+Para tener en cuenta todas la variables en el modelo las 2 variables categoricas la volvemos dummies
+```{r}
+data(jura)
+jura.pred$Forest=ifelse(jura.pred$Landuse== "Forest",1,0)
+jura.pred$Pasture=ifelse(jura.pred$Landuse== "Pasture",1,0)
+jura.pred$Meadow=ifelse(jura.pred$Landuse== "Meadow",1,0)
+
+#######################################
+jura.pred$Argovian=ifelse(jura.pred$Rock== "Argovian",1,0)
+jura.pred$Kimmeridgian=ifelse(jura.pred$Rock== "Kimmeridgian",1,0)
+jura.pred$Sequanian=ifelse(jura.pred$Rock== "Sequanian",1,0)
+jura.pred$Portlandian=ifelse(jura.pred$Rock== "Portlandian",1,0)
+
+
+jura.pred<-jura.pred[,-c(5,6)]
+head(jura.pred)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', eval=TRUE}
+numeric_columns <- sapply(jura.pred, is.numeric)
+jura_numeric <- jura.pred[, c("Cd", "Co", "Cr", "Cu", "Ni", "Pb", "Zn","Forest","Pasture","Meadow","Argovian","Kimmeridgian","Sequanian","Portlandian")]
+# Calcular la correlación
+correlation_matrix <- cor(jura_numeric)
+correlation_matrix
+```
+
+A partir de los resultados de la correlación para los diferentes tipos de metales de la data _jura_, se puede observar lo siguiente: La fuerte correlación entre _Cobalto (Co) y Níquel (Ni)_ es alta $0.7507369$, lo que puede indicar que estos metales tienen un origen común o procesos de transporte y acumulación similares en el área de estudio, la correlación entre _Cromo (Cr) y Níquel (Ni)_ también es alta $0.6926826$, lo que sugiere que estos metales pueden estar relacionados en términos de fuentes o comportamiento geoquímico y la correlación entre _Plomo (Pb) y Cobre (Cu)_ es la más alta $0.7783533$, lo que implica que estos metales tienen una estrecha asociación y pueden tener fuentes similares o procesos de acumulación conjuntos. Sin embargo, la baja correlación entre _Cobre (Cu) y Cadmio (Cd)_ indica que estos metales pueden tener orígenes o comportamientos geoquímicos diferentes en el área de estudio y La débil correlación entre _Plomo (Pb) y Cobalto (Co)_, así como entre _Plomo (Pb) y Cromo (Cr)_, sugiere que estos metales pueden tener fuentes o procesos de acumulación más independientes en comparación con los otros pares de metales.
+
+Las correlaciones varían considerablemente entre los diferentes tipos de suelo y formaciones geológicas, algunos metales, como el cromo _(Cr)_ en Pasture y el níquel _(Ni)_ en Kimmeridgian, muestran correlaciones positivas más fuertes, lo que podría indicar concentraciones más altas en esos tipos de suelo. Las formaciones geológicas como Argovian y Kimmeridgian muestran algunas correlaciones negativas significativas con ciertos metales, lo que sugiere que estos podrían estar menos presentes en esas áreas, lo que sugiere una distribución espacial variada de metales en diferentes tipos de suelo y formaciones geológicas, lo que podría reflejar diferencias en las fuentes de contaminación o en los procesos geológicos que los afectan.
+
+## Modelo de regresión
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", collapse=FALSE, eval=TRUE}
+
+# Ajustar el modelo de regresión lineal
+tendencia <- lm(Co ~ Ni, data = jura.pred)
+
+# Resumen del modelo
+summary(tendencia)
+
+# Gráfico de dispersión de la concentración de cobalto con la línea de tendencia temporal
+ggplot(jura.pred, aes(x = Co, y = Ni)) +
+  geom_point() +  # Puntos de datos originales
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "maroon") +  # Línea de tendencia
+  labs(title = "Tendencia temporal del Cobalto (Co)",
+       x = "Concentración de cobalto en el suelo superior",
+       y = "Concentración de niquel en el suelo superior",
+       caption = "Fuente: jura dataset") +
+  theme_minimal()
+
+```
+
+
+Nuestra variable de interés es la concentración del cobalto en el suelo superior, anteriormente se realizo la correlación de cada uno de los metales para observar cuales están mas correlacionadas entre si, se observó que el metal _Níquel (Ni)_ es el que tiene mayor relación positiva con el _Cobalto (Co)_, cuando ajustamos un modelo de regresión lineal, este muestra que el _Níquel (Ni)_ tiene una relación significativa con _Cobalto (Co)_, con un ajuste moderado del modelo a los datos que parece ser robusto y proporciona una explicación sustancial de la variabilidad en _Cobalto (Co)_ como se puede apreciar en el gráfico.
+
+
+## Mapa para la visualización de Cobalto
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', eval=TRUE}
+
+# Cargar las diferentes partes de la base de datos 'jura'
+data(jura.pred, package = "gstat")
+data(jura.grid, package = "gstat")
+data(jura.val, package = "gstat")
+
+# Convertir 'jura.pred' a un objeto sf
+jura_sf <- st_as_sf(jura.pred, coords = c("Xloc", "Yloc"), crs = 4326)
+jura_grid <- st_as_sf(jura.grid, coords = c("Xloc", "Yloc"), crs = 4326)
+#tmap_mode("view")
+
+# Crear un mapa básico con tmap
+tm_shape(jura_sf) +
+  tm_dots(col = "Co", palette = "viridis", size = 0.5, title = "Concentración de Co") +
+  tm_layout(title = "Mapa de Concentración de Cobalto (Co)",
+            legend.position = c("left", "bottom"))
+
+
+```
+
+
+
+## La coordenada media
+
+```{r}
+jura.pred<- as.data.frame(jura.pred)
+coordinates(jura.pred) = ~ long + lat
+coordenada_media <- colMeans(coordinates(jura.pred))
+coordenada_media
+```
+
+Las coordenadas $( 6.858268, 47.135434 )$ representan el punto central o la coordenada promedio de todas las ubicaciones del conjunto de datos Jura.
+La coordenada media es el promedio de las coordenadas espaciales (latitud y longitud). Esto dara una idea
+del “centro” de la distribución espacial de los datos.
+
+
+## mapa de cuantiles
+```{r}
+
+jura.pred$Co_quantile <- cut(jura.pred$Co, 
+                           breaks = quantile(jura.pred$Co, probs = seq(0, 1, 0.25)), 
+                           include.lowest = TRUE, 
+                           labels = c("1er Cuartil", "2do Cuartil", "3er Cuartil", "4to Cuartil"))
+
+
+```
+
+
+Los valores de la concentración de cobalto en el dataset se han dividido en cuatro cuartiles. Cada cuartil representa el 25% de los datos:
+
+1er Cuartil: Los valores de concentracion mas bajos.
+
+2do Cuartil: Valores un poco más altos.
+
+3er Cuartil: Valores más altos que los dos primeros cuartiles.
+
+4to Cuartil: Los valores más de concentracion de cobalto
+
+```{r}
+
+#tmap_mode("view")
+tm_shape(jura.pred) +
+  tm_dots(col = "Co_quantile", palette = "-viridis", size = 0.1, title = "Cuantiles de cobalto") +
+  tm_layout(title = "Box Map: Concentracion de cobalto")
+
+```
+
+
+# Construcción del Variograma
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', collapse=FALSE, eval=TRUE}
+data(jura)
+# Cálculo del variograma
+var <- variogram(log(Co) ~ 1, data = jura.pred, locations =  ~Xloc+Yloc)
+
+# Convertir el variograma a un dataframe
+var_df <- as.data.frame(var)
+
+# Crear el gráfico con ggplot2
+ggplot(var_df, aes(x = dist, y = gamma)) +
+  geom_point(color = "darkorchid4", size=2) +  # Agregar puntos del variograma
+  labs(x = "Distancia", y = "Varianza") +
+  theme_minimal() +
+  ggtitle("Variograma de la Concentracion de Cobalto")
+
+```
+
+
+## Ajustar modelo teórico
+
+### Ajustar un modelo de variograma esférico
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', collapse=FALSE, eval=TRUE}
+# Variograma
+var <- variogram(log(Co) ~ 1, data = jura.pred, locations =  ~Xloc+Yloc
+)
+
+# Ajuste de un modelo teorico al variograma
+model_fit <- fit.variogram(var, vgm(1, "Sph", 0.2 , 0.1))
+model_fit
+```
+
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', collapse=FALSE, eval=TRUE}
+# Generar valores para la línea del modelo ajustado
+distances <- seq(0, max(var$dist), length.out = 50)
+model_values <- variogramLine(model_fit, dist_vector = distances)
+
+# Convertir el variograma experimental a un data frame
+Variograma_df <- as.data.frame(var)
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "darkorchid") +  # Puntos del variograma
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "pink2") +     # Línea del modelo ajustado
+  theme_minimal() +
+  labs(title = "Variograma con Linea de Ajuste (Modelo Sph)",
+       x = "Distancia",
+       y = "Semivarianza")
+```
+
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', collapse=FALSE, eval=TRUE}
+# Extraer los parámetros del modelo ajustado
+nugget <- model_fit[1, "psill"]
+psill <- model_fit[1, "psill"] + nugget
+range <- model_fit[1, "range"]
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "black") + 
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "blue") +    
+  geom_hline(yintercept = nugget, linetype = "dashed", color = "red4") +  
+  geom_hline(yintercept = psill, linetype = "dashed", color = "pink3") +        
+  geom_vline(xintercept = range, linetype = "dashed", color = "purple") +       
+  annotate("text", x = range, y = nugget, label = paste("Nugget =", round(nugget, 2)), vjust = -0.5, color = "red4") +
+  annotate("text", x = range, y = psill, label = paste("Psill =", round(psill, 2)), vjust = -0.5, color = "pink3") +
+  annotate("text", x = range, y = max(var$gamma) + 0.05, label = paste("Range =", round(range, 2)), hjust = -0.01, color = "purple") +
+  theme_minimal() +
+  labs(title = "Variograma con Parametros del Modelo (Nugget, Psill, Range)",
+       x = "Distancia",
+       y = "Semivarianza")
+
+
+model_fit
+```
+
+
+los parametros adecuados para el efecto pepita, la meseta y el rango:
+
+- **efecto pepita**: 0
+- **la meseta**: 0.2
+- **el rango**: 0.77
+
+
+### Ajustar un modelo de variograma exponencial
+
+
+```{r}
+# Variograma
+var <- variogram(log(Co) ~ 1, data = jura.pred, locations =  ~Xloc+Yloc)
+
+# Ajuste de un modelo teÃ³rico al variograma
+model_fit_exp <- fit.variogram(var, vgm(0.24,"Exp",0.46,0.02))
+model_fit_exp
+```
+
+
+```{r, echo=FALSE, fig.align='center'}
+
+# Generar valores para la línea del modelo ajustado
+distances <- seq(0, max(var$dist), length.out = 50)
+model_values <- variogramLine(model_fit_exp, dist_vector = distances)
+
+# Convertir el variograma experimental a un data frame
+Variograma_df <- as.data.frame(var)
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "black") +  # Puntos del variograma
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "pink2") +     # Línea del modelo ajustado
+  theme_minimal() +
+  labs(title = "Variograma con Linea de Ajuste (Modelo Exp)",
+       x = "Distancia",
+       y = "Semivarianza")
+
+```
+
+
+```{r, echo=FALSE, fig.align='center'}
+# Extraer los parámetros del modelo ajustado
+nugget <- model_fit_exp[1, "psill"]
+psill <- model_fit_exp[1, "psill"] + nugget
+range <- model_fit_exp[2, "range"]
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "black") +  # Puntos del variograma
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "blue") +    
+  geom_hline(yintercept = nugget, linetype = "dashed", color = "red4") +         
+  geom_hline(yintercept = psill, linetype = "dashed", color = "pink3") +   
+  geom_vline(xintercept = range, linetype = "dashed", color = "purple") +   
+  annotate("text", x = range , y = nugget, label = paste("Nugget =", round(nugget, 2)), vjust = -0.5, color = "red4") +
+  annotate("text", x = range, y = psill, label = paste("Psill =", round(psill, 2)), vjust = -0.5, color = "pink3") +
+  annotate("text", x = range, y = max(var$gamma) + 0.05, label = paste("Range =", round(range, 2)), hjust = -0.1, color = "purple") +
+  theme_minimal() +
+  labs(title = "Variograma con Parametros del Modelo (Nugget, Psill, Range)",
+       x = "Distancia",
+       y = "Semivarianza")
+
+
+model_fit_exp
+```
+
+
+los parametros adecuados para el efecto pepita, la meseta y el rango.
+
+- **efecto pepita**: 0.02
+- **la meseta**:0.03
+- **el rango**: 0.58
+
+### Ajustar un modelo de variograma Gaussiano
+
+
+```{r}
+# Variograma
+var <- variogram(log(Co) ~ 1, data = jura.pred, locations =  ~Xloc+Yloc)
+# Ajuste de un modelo teÃ³rico al variograma
+model_fit_gau <- fit.variogram(var, vgm(1, "Gau", 2 , 1))
+
+```
+
+
+```{r, echo=FALSE, fig.align='center'}
+
+
+# Generar valores para la línea del modelo ajustado
+distances <- seq(0, max(var$dist), length.out = 10)
+model_values <- variogramLine(model_fit_gau, dist_vector = distances)
+
+# Convertir el variograma experimental a un data frame
+Variograma_df <- as.data.frame(var)
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "black") +  # Puntos del variograma
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "pink2") +     # Línea del modelo ajustado
+  theme_minimal() +
+  labs(title = "Variograma con Linea de Ajuste (Modelo Gau)",
+       x = "Distancia",
+       y = "Semivarianza")
+
+```
+
+```{r, echo=FALSE, fig.align='center'}
+# Extraer los parámetros del modelo ajustado
+nugget <- model_fit_gau[1, "psill"]
+psill <- model_fit_gau[2, "psill"] + nugget
+range <- model_fit_gau[2, "range"]
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "black") +  # Puntos del variograma
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "blue") +   
+  geom_hline(yintercept = nugget, linetype = "dashed", color = "red4") +
+  geom_hline(yintercept = psill, linetype = "dashed", color = "pink3") + 
+  geom_vline(xintercept = range, linetype = "dashed", color = "purple") +   
+  annotate("text", x = range , y = nugget, label = paste("Nugget =", round(nugget, 2)), vjust = -0.5, color = "red4") +
+  annotate("text", x = range , y = psill, label = paste("Psill =", round(psill, 2)), vjust = -0.5, color = "pink3") +
+  annotate("text", x = range, y = max(var$gamma) + 0.05, label = paste("Range =", round(range, 2)), hjust = -0.1, color = "purple") +
+  theme_minimal() +
+  labs(title = "Variograma con Parametros del Modelo (Nugget, Psill, Range)",
+       x = "Distancia",
+       y = "Semivarianza")
+
+
+model_fit
+```
+
+
+los parametros adecuados para el efecto pepita, la meseta y el rango.
+
+- **efecto pepita**: 0.04
+- **la meseta**: 0.24
+- **el rango**: 0.46
+
+
+### Ajustar un modelo de variograma Monomico
+
+
+	range: Inicialmente, se establece entre 1 y 2 . Es la distancia a la cual la semi-variancia se estabiliza y representa el alcance de la autocorrelación espacial. 
+	
+```{r}
+var <- variogram(log(Co) ~ 1, data = jura.pred, locations =  ~Xloc+Yloc)
+# Ajuste de un modelo teÃ³rico al variograma
+model_fit_mo <- fit.variogram(var, vgm(1, "Pow", 2 , 1))
+
+```
+
+
+```{r, echo=FALSE, fig.align='center'}
+
+
+# Generar valores para la línea del modelo ajustado
+distances <- seq(0, max(var$dist), length.out = 100)
+model_values <- variogramLine(model_fit_mo, dist_vector = distances)
+
+# Convertir el variograma experimental a un data frame
+Variograma_df <- as.data.frame(var)
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "black") +  # Puntos del variograma
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "pink2") +     # Línea del modelo ajustado
+  theme_minimal() +
+  labs(title = "Variograma con Linea de Ajuste (pow)",
+       x = "Distancia",
+       y = "Semivarianza")
+
+```
+
+
+```{r, echo=FALSE, fig.align='center'}
+
+# Extraer los parámetros del modelo ajustado
+nugget <- model_fit_mo[1, "psill"]
+psill <- model_fit_mo[2, "psill"] + nugget
+range <- model_fit_mo[2, "range"]
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "black") +  # Puntos del variograma
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "blue") +   
+  geom_hline(yintercept = nugget, linetype = "dashed", color = "red4") +     
+  geom_hline(yintercept = psill, linetype = "dashed", color = "pink3") +     
+  geom_vline(xintercept = range, linetype = "dashed", color = "purple") + 
+  annotate("text", x = range + 1, y = nugget, label = paste("Nugget =", round(nugget, 2)), vjust = -0.5, color = "red4") +
+  annotate("text", x = range + 1, y = psill, label = paste("Psill =", round(psill, 2)), vjust = -0.5, color = "pink3") +
+  annotate("text", x = range, y = max(var$gamma) + 0.05, label = paste("Range =", round(range, 2)), hjust = -0.1, color = "purple") +
+  theme_minimal() +
+  labs(title = "Variograma con Parametros del Modelo (Nugget, Psill, Range)",
+       x = "Distancia",
+       y = "Semivarianza")
+
+
+model_fit
+```
+
+
+los parametros adecuados para el efecto pepita, la meseta y el rango.
+
+- **efecto pepita**: 0
+- **la meseta**: 0.21
+- **el rango**: 0.77
+
+
+###  Ajustar un modelo de variograma Pepita pura
+
+
+```{r}
+var <- variogram(log(Co) ~ 1, data = jura.pred, locations =  ~Xloc+Yloc)
+# Ajuste de un modelo teÃ³rico al variograma
+model_fit_pepita<- fit.variogram(var, vgm("Nug"))
+
+```
+
+
+```{r, echo=FALSE, fig.align='center'}
+
+# Generar valores para la línea del modelo ajustado
+distances <- seq(0, max(var$dist), length.out = 100)
+model_values <- variogramLine(model_fit_pepita, dist_vector = distances)
+
+# Convertir el variograma experimental a un data frame
+Variograma_df <- as.data.frame(var)
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "black") +  # Puntos del variograma
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "pink2") +     # Línea del modelo ajustado
+  theme_minimal() +
+  labs(title = "Variograma con Linea de Ajuste (Modelo Sph)",
+       x = "Distancia",
+       y = "Semivarianza")
+
+```
+
+
+```{r, echo=FALSE, fig.align='center', warning=FALSE, message=FALSE, include=TRUE, comment="", collapse=FALSE, eval=TRUE}
+# Extraer los parámetros del modelo ajustado
+nugget <- model_fit_pepita[1, "psill"]
+psill <- model_fit_pepita[2, "psill"] + nugget
+range <- model_fit_pepita[2, "range"]
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "black") +  # Puntos del variograma
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "blue") +
+  geom_hline(yintercept = nugget, linetype = "dashed", color = "red4") +        
+  geom_hline(yintercept = psill, linetype = "dashed", color = "pink3") +   
+  geom_vline(xintercept = range, linetype = "dashed", color = "purple") +  
+  annotate("text", x = range + 1, y = nugget, label = paste("Nugget =", round(nugget, 2)), vjust = -0.5, color = "red4") +
+  annotate("text", x = range + 1, y = psill, label = paste("Psill =", round(psill, 2)), vjust = -0.5, color = "pink3") +
+  annotate("text", x = range, y = max(var$gamma) + 0.05, label = paste("Range =", round(range, 2)), hjust = -0.1, color = "purple") +
+  theme_minimal() +
+  labs(title = "Variograma con Parametros del Modelo (Nugget, Psill, Range)",
+       x = "Distancia",
+       y = "Semivarianza")
+
+
+model_fit
+```
+
+
+
+los parametros adecuados para el efecto pepita, la meseta y el rango.
+
+- **efecto pepita**: 1
+- **la meseta**:0
+- **el rango**: 0
+
+
+# Ajustar el modelo adecuado 
+Despues de escoger los parametros adecuados y seleccionar el modelo que mejor se ajusta para nuestros datos, anteriormente observamos el ajuste de todos los modelos de semivariograma dados en clase y para nuestro trabajo el modelo exponencial ha demostrado ser el más adecuado para describir la variabilidad espacial en los datos. Esto indica que el comportamiento de la variabilidad en el dataset se ajusta bien a la estructura proporcionada por el modelo exponencial.
+
+ademas ya tenemos los parametros que mejor se ajustan que son
+
+- **efecto pepita**: 0.04
+- **la meseta**: 0.24
+- **el rango**: 0.46
+
+```{r}
+var <- variogram(log(Co) ~ 1, data = jura.pred, locations =  ~Xloc+Yloc)
+model_fit_exp <- fit.variogram(var, vgm(0.24,"Exp",0.46,0.04))
+
+# Generar valores para la línea del modelo ajustado
+distances <- seq(0, max(var$dist), length.out = 50)
+model_values <- variogramLine(model_fit_exp, dist_vector = distances)
+
+# Convertir el variograma experimental a un data frame
+Variograma_df <- as.data.frame(var)
+
+# Graficar el variograma experimental y el modelo ajustado usando ggplot2
+ggplot() +
+  geom_point(data = Variograma_df, aes(x = dist, y = gamma), color = "black") +  # Puntos del variograma
+  geom_line(data = model_values, aes(x = dist, y = gamma), color = "pink2") +     # Línea del modelo ajustado
+  theme_minimal() +
+  labs(title = "Variograma con Linea de Ajuste (Modelo Exp)",
+       x = "Distancia",
+       y = "Semivarianza")
+
+```
+
+
+podemos proceder a realizar las estimaciones.
+
+# Kriging LINEAL
+
+## Ordinario
+
+```{r}
+data(jura)
+
+
+var <- variogram(log(Co) ~ 1, data = jura.pred, locations =  ~Xloc+Yloc
+)
+
+coordinates(jura.pred) <- ~Xloc + Yloc
+# Crear una cuadricula sobre la que hacer la interpolacion
+jura_grid <- st_make_grid(jura.pred, n = c(100, 100), what = "centers")
+jura_grid_spatial <- as_Spatial(jura_grid)
+
+# Ajustar un modelo de variograma a los datos indicativos
+
+model_fit <- fit.variogram(var, model = vgm(0.24,"Exp",0.46,0.04))
+
+# Realizar Kriging 
+gridded(jura_grid_spatial)<- TRUE
+# Kriging ordinario
+kriging_result_ordinario <- krige(log(Co) ~ 1, jura.pred,
+                                  jura_grid_spatial, model = model_fit)
+# VisualizaciÃ³n de los resultados de Kriging
+spplot(kriging_result_ordinario["var1.pred"], main = "Kriging Ordinario modelo Exponencial ")
+
+
+```
+Se puede observar que la zona mas oscura representa las zonas con menores concentraciones de cobalto  y las zonas claras las zonas con mayores concentraciones de cobalto.
+
+se observa que hay muy pocas zonas con poca concentracion ademas estan dispersas esas zonas esto indica que hay zonas significativas con alta contaminación.
+
+Las concentraciones mas altas estan cerca por donde pasa la via del tren, este puede ser un agente significante de contaminacion o puede que sea la condiciones geologicas.
+
+
+## Simple
+
+```{r}
+# Ajustar un modelo de variograma a los datos indicativos
+
+model_fit <- fit.variogram(var, model = vgm(0.24,"Exp",0.46,0.04))
+
+
+# Realizar Kriging Indicativo
+gridded(jura_grid_spatial)<- TRUE
+# Kriging ordinario
+kriging_result_simple <- krige(log(Co) ~ 1, jura.pred, jura_grid_spatial,
+                               model = model_fit, nmax = 30, beta = mean(jura.pred$Co))
+# VisualizaciÃ³n de los resultados de Kriging
+spplot(kriging_result_simple["var1.pred"], main = "Kriging simple modelo Exponencial ")
+
+```
+Se puede observar que la zona mas oscura representa las mayores concentraciones  y las zonas claras las de mayor concentracion.
+en la parte centrica se concentra las zonas con menores ccncentracion pero esta a diferencia del Kriging ordinario las zonas son mas grandes y son las de menor concentracion pero se extiende gradualmente en las periferias .
+
+Sabemos que el kriging se estiman valores en ubicaciones no muestreadas basándose en valores observados en ubicaciones cercanas, el kriging simple puede no capturar esta tendencia correctamente, a diferencia de otros métodos de kriging
+
+
+el **Kriging Ordinario** muestra patrones espaciales más coherentes con la realidad de los datos, el kriging ordinario muestra mejores resultados en términos de precisión de predicción, ajuste del variograma, y representación visual en comparación con otros.
+
+# Kriging NO LINEAL
+
+## Indicador
+
+El kriging de indicador presupone el modelo $I(s)=\mu+\epsilon(s)$
+
+donde $\mu$ es una constante desconocida e I(s) es una variable binaria. El Kriging Indicador se basa en el uso de variables indicadoras para manejar variables categóricas o para datos que representan la presencia o ausencia de una característica. En lugar de trabajar directamente con valores continuos, se convierte la variable en una variable binaria (indicadora) y se realiza Kriging sobre esta variable.
+Observe que, dado que las variables de indicador son 0 o 1, las interpolaciones estarán entre 0 y 1 y las predicciones del kriging de indicador se pueden interpretar como probabilidades de que la variable sea 1 o que esté en la clase indicada por 1. Si se utilizó un umbral para crear la variable de indicador, el mapa de interpolación resultante mostrará las probabilidades de que se supere (o no se alcance) el umbral.
+
+Pasos en el Kriging Indicativo:
+
+1. **Definición del Umbral:** Se selecciona un umbral para la variable de interés. Por ejemplo, si quieres saber la probabilidad de que la concentración de cobalto (Co) supere un cierto valor en un área específica.
+  
+2. **Transformación Indicativa:** Se transforma la variable continua en una variable indicativa binaria:
+   \[
+   Z_i(x) = \begin{cases} 
+   1 & \text{si } Z(x) \geq \text{Umbral} \\
+   0 & \text{si } Z(x) < \text{Umbral}
+   \end{cases}
+   \]
+  
+3. **Kriging de los Valores Indicativos:** Se realiza kriging sobre los valores indicativos para obtener una estimación de la probabilidad de excedencia en cada punto del área de estudio.
+
+4. **Estimación de la Probabilidad:** El resultado del kriging indicativo es un mapa de probabilidad que indica la probabilidad de que el umbral se supere en cada ubicación no muestreada.
+
+Vamos evaluar la probabilidad de que la concentración de cobalto (`Co`) exceda 10 mg/kg:
+
+```{r}
+
+# Definir el umbral para el análisis indicativo
+umbral <- 10
+
+# Crear una nueva columna binaria indicativa para Co
+jura.pred$Co_indicative <- ifelse(jura.pred$Co >= umbral, 1, 0)
+
+# Ajustar un modelo de variograma a los datos indicativos
+variograma_ind <- variogram(Co_indicative ~ 1, jura.pred)
+modelo_variograma_ind <- fit.variogram(variograma_ind,
+                                       model = vgm(0.24,"Exp",0.46,0.04))
+
+
+# Realizar Kriging Indicativo
+gridded(jura_grid_spatial)<- TRUE
+kriging_indicativo <- krige(Co_indicative ~ 1, jura.pred, jura_grid_spatial, model = modelo_variograma_ind)
+# VisualizaciÃ³n de los resultados de Kriging
+spplot(kriging_indicativo["var1.pred"], main = "Kriging indicativo modelo exponencial ")
+
+
+```
+
+
+Los resultados proporcionan un mapa de probabilidad donde cada punto indica la probabilidad de que la concentración de Cobalto supere 10 mg/kg.
+
+
+Podemos observar que las probabilidades donde la concentracion de cobalto supere 10 mg/kg estan dispersa en la parte centrica y baja, con la informacion obtenida del mapa sabemos que cereca de esta periferia es proximas donde pasa la via del tren.
+
+Las zonas con alta concentración de cobalto pueden ser áreas de interés para investigaciones más profundas. Esto puede implicar la necesidad de realizar estudios adicionales para entender las causas de estas concentraciones, como posibles fuentes de contaminación o características geológicas locales.
+
+
+
+##  Probabilistico 
+
+El Kriging Probabilístico extiende el Kriging clásico al incorporar la incertidumbre y proporciona estimaciones probabilísticas en lugar de determinísticas. Utiliza distribuciones de probabilidad para modelar la variabilidad en las estimaciones.
+El kriging probabilístico se utiliza para estimar la probabilidad de que una variable continúe por encima o por debajo de un umbral dado. A diferencia del kriging indicativo, que trabaja con indicadores binarios (0 o 1), el kriging probabilístico trabaja directamente con probabilidades continuas. Es una técnica valiosa cuando se esta interesado en predecir la probabilidad de ciertos eventos en lugar de valores exactos.
+
+Aplicación de Parámetros:
+
+Número de Simulaciones: Define cuántas simulaciones se realizarán para generar las realizaciones estocásticas.
+Modelos de Variograma: Se ajusta para cada simulación, proporcionando diferentes realizaciones basadas en el modelo de variograma.
+Cuándo Aplicar:
+
+Cuando se necesita cuantificar la incertidumbre en las estimaciones espaciales.
+Ideal para aplicaciones donde la variabilidad en los datos es significativa y se desea comprender la distribución de posibles resultados
+
+Pasos para realizar Kriging Probabilístico:
+
+### 1. Ajustar el Variograma: Calcula y ajusta el variograma de manera estándar.
+
+
+```{r}
+# Graficar el variograma
+plot(var, model_fit)
+```
+
+### 2. Generar Simulaciones: Genera múltiples realizaciones simuladas del campo espacial utilizando métodos estocásticos.
+
+```{r}
+set.seed(123)
+
+model_fit_prob <- fit.variogram(var, model = vgm(0.24,"Exp",0.46,0.04))
+
+# Generar 100 simulaciones
+simulations <- krige(log(Co)~1, jura.pred, jura_grid_spatial,
+                     model = model_fit_prob, nmax = 30, nsim = 100)
+
+# Visualizar una de las simulaciones
+spplot(simulations[1], main = "Kriging Probabilistico")
+```
+A raíz de de las simulaciones realizadas para el kriging probabilistico es correcto afirmar que las concentración de cobalto se encuentran mayormente distribuidas en zonas centricas al área estudiada y que possiblemente esten relacionadas con otras variables confusoras quienes puede ayudar a explicar con mayor profundida presencia de Cobalto en esta áarea en particular.
+
+
+### 3. Estimar Probabilidades: Analiza las simulaciones para obtener estimaciones probabilísticas.
+
+```{r}
+# Definir un umbral
+threshold <- log(4.0)
+
+# Calcular la probabilidad de exceder el umbral
+prob_exceed <- apply(as.data.frame(simulations), 1, function(x) mean(x > threshold))
+
+# Añadir las probabilidades a la cuadrícula de datos
+jura_grid_spatial$prob_exceed <- prob_exceed
+
+# Graficar la probabilidad de exceder el umbral
+spplot(jura_grid_spatial, "prob_exceed", main = "Estimaciones del Kriging probabilistico")
+```
+Como bien mencionaba anteriormente la presencia de Cobalto en puntos medios del área estudiada refleja con exactitud a partir de la estimación calculada; en este caso que la concentración de cobalto supere un 4 10 mg/kg.
+
+## Log-Normal 
+
+Kriging Log-Normal se hacen transformaciones de la variable regionalizada con el propósito de normalizar en cada sitio de la región de estudio este kriging consiste en aplicar kriging ordinario a la transformación logarítmica de los datos. 
+
+
+1. **Transformación de Datos:**
+   - Dado que \( Z(x) \) sigue una distribución log-normal, su logaritmo natural \( Y(x) = \log(Z(x)) \) tiene una distribución normal.
+   - La transformación \( Y(x) \) es necesaria para aplicar el kriging, ya que el kriging ordinario asume normalidad en los datos.
+
+2. **Predicción de \( Y(x) \) con Kriging Ordinario:**
+   - Para predecir \( Y(x_0) \) en un punto \( x_0 \), se usa el kriging ordinario sobre los valores transformados:
+     \[
+     \hat{Y}(x_0) = \sum_{i=1}^{n} \lambda_i Y(x_i)
+     \]
+   - Los pesos \( \lambda_i \) se obtienen de manera similar al kriging ordinario, utilizando el semivariograma de los valores transformados \( Y(x) \).
+
+3. **Retransformación a la Escala Original:**
+   - El predictor en la escala original se calcula como:
+     \[
+     \hat{Z}(x_0) = \exp(\hat{Y}(x_0))
+     \]
+   - Sin embargo, este predictor es sesgado debido a la transformación logarítmica.
+
+4. **Corrección del Sesgo:**
+   - Para obtener un predictor insesgado, se debe ajustar el predictor con una corrección basada en la varianza de predicción y el multiplicador de Lagrange:
+     \[
+     \hat{Z}(x_0) = \exp \left( \hat{Y}(x_0) + \frac{\sigma^2_{k0}}{2} \right)
+     \]
+     donde \( \sigma^2_{k0} \) es la varianza de predicción obtenida en \( x_0 \) mediante kriging ordinario sobre los valores transformados y \( \frac{\sigma^2_{k0}}{2} \) es el ajuste para corregir el sesgo.
+
+En resumen, el kriging log-normal permite predecir variables con distribución log-normal transformando los datos, aplicando kriging ordinario, y luego corrigiendo el sesgo de retransformación para obtener estimaciones insesgadas en la escala original.
+
+```{r}
+data(jura)
+var <- variogram(log(Co) ~ 1, data = jura.pred, locations = ~Xloc + Yloc)
+model_fit_exp <- fit.variogram(var, vgm(0.24, "Exp", 0.46, 0.04))
+coordinates(jura.pred) <- ~Xloc + Yloc
+# Crear una cuadricula sobre la que hacer la interpolacion
+jura_grid <- st_make_grid(jura.pred, n = c(100, 100), what = "centers")
+jura_grid_spatial <- as_Spatial(jura_grid)
+# Realizar Kriging Indicativo
+gridded(jura_grid_spatial)<- TRUE
+# Realizar kriging ordinario
+krig_ordinary <- krige(log(Co) ~ 1, jura.pred, jura_grid_spatial, model = model_fit_exp)
+# Retransformar la predicción
+pred_log <- krig_ordinary$var1.pred
+# Obtener la varianza de predicción
+var_pred <- krig_ordinary$var1.var
+
+# Ajustar la predicción
+pred_corrected <- exp(pred_log + var_pred / 2)
+
+# Crear un objeto SpatialPixelsDataFrame con la predicción corregida
+jura_grid_spatial$pred_corrected <- pred_corrected
+
+# Visualizar el resultado
+spplot(jura_grid_spatial, "pred_corrected", main = "Kriging Log-Normal modelo exponencial")
+
+
+```
+
+podemos observar el mapa de predicciones corregidas para identificar las áreas de alta y baja concentración de Cobalto. Las zonas con colores más cálidos o intensos representan áreas de mayor concentración de Cobalto.
+
+el kriging log-normal está proporcionando estimaciones consistentes con las observaciones. y podemos observar qqe las zonas con las mayores concentraciones de cobalto estan dispersas creca de donde pasa la via del tren pero no estan tan agrupadas estas zonas.
+
+
+## Trans-Gaussiano
+
+El kriging trans-Gaussiano es una extensión del kriging que se utiliza cuando la variable de interés no sigue una distribución normal en su escala original, pero puede ser transformada para aproximarse a una distribución normal.
+
+**Definición de Kriging Trans-Gaussiano**
+
+El kriging trans-Gaussiano implica tres pasos principales:
+
+1. **Transformación de la Variable Original**:
+   - Se aplica una transformación a la variable regionalizada \( Z(x) \) para obtener una nueva variable \( Y(x) \) que se asume sigue una distribución normal:
+     \[
+     Y(x) = T(Z(x))
+     \]
+     Donde \( T(\cdot) \) es una transformación que puede ser logarítmica, Box-Cox, raíz cuadrada, entre otras.
+
+2. **Aplicación del Kriging en la Escala Transformada**:
+   - Se aplica kriging ordinario (u otro tipo de kriging) a la variable transformada \( Y(x) \). Dado que \( Y(x) \) se comporta como una variable normal, las suposiciones del kriging estándar son válidas.
+
+3. **Retransformación a la Escala Original**:
+   - Una vez obtenidas las predicciones \( \hat{Y}(x_0) \) en la escala transformada, se retransfieren a la escala original utilizando la inversa de la función de transformación:
+     \[
+     \hat{Z}(x_0) = T^{-1}(\hat{Y}(x_0))
+     \]
+   - Dado que la retransformación puede introducir sesgo, en algunos casos se aplica una corrección para obtener un estimador insesgado.
+
+ **Transformación**:
+   - Si \( Z(x) \) es la variable original y \( Y(x) = T(Z(x)) \) es la variable transformada:
+     \[
+     Y(x) = \log(Z(x)) \quad \text{(si se usa una transformación logarítmica)}
+     \]
+
+ **Kriging Ordinario en la Escala Transformada**:
+   - Se aplica kriging ordinario a \( Y(x) \) para obtener predicciones \( \hat{Y}(x_0) \) en puntos no muestreados:
+     \[
+     \hat{Y}(x_0) = \sum_{i=1}^{n} \lambda_i Y(x_i)
+     \]
+     Donde los pesos \( \lambda_i \) se obtienen resolviendo el sistema de ecuaciones derivado del modelo de variograma ajustado en la escala transformada.
+
+ **Retransformación a la Escala Original**:
+   - Retransformación directa (puede ser sesgada):
+     \[
+     \hat{Z}(x_0) = \exp(\hat{Y}(x_0))
+     \]
+   - Corrección del sesgo para obtener un estimador insesgado:
+     \[
+     \hat{Z}(x_0) = \exp\left(\hat{Y}(x_0) + \frac{\sigma^2_{k0}}{2}\right)
+     \]
+     Donde \( \sigma^2_{k0} \) es la varianza de predicción en la escala transformada.
+
+El kriging trans-Gaussiano es una herramienta poderosa en la geoestadística para manejar datos que no cumplen con las suposiciones de normalidad, pero requiere cuidado en la transformación de los datos y en la interpretación de los resultados.
+
+```{r}
+data(jura)
+jura_sf <- st_as_sf(jura.pred, coords = c("Xloc", "Yloc"), crs = 4326)
+
+jura_grid_gau <- st_as_sf(jura.grid, coords = c("Xloc", "Yloc"), crs = 4326)
+
+v = vgm(0.24,"Exp",0.46,0.04)
+lambda = -0.25
+
+m = fit.variogram(variogram((Co^lambda-1)/lambda ~ 1,jura_sf), vgm(0.24,"Exp",0.46,0.04))
+
+
+x = krigeTg(Co~1,jura_sf, jura_grid_gau ,m,lambda=-0.25)
+
+
+kriging_df <- as.data.frame(x)
+
+# Extraer coordenadas x e y desde la geometría
+kriging_df$x <- st_coordinates(x)[, 1]
+kriging_df$y <- st_coordinates(x)[, 2]
+
+
+kriging_df %>% as.data.frame %>%
+  ggplot(aes(x=x, y=y)) + geom_tile(aes(fill=var1TG.pred)) + coord_equal() +
+  scale_fill_gradient(low = "yellow", high="purple4") +
+  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+  theme_bw()
+```
+ 
+ Zonas Claras: Estas representan áreas donde la concentración predicha de Co es baja. Estas áreas pueden estar en regiones menos contaminadas o donde la presencia de cobalto es naturalmente baja.
+Zonas Oscuras: Representan áreas con alta concentración predicha de Co. Estas áreas pueden estar cerca de fuentes de contaminación o en regiones geológicas con alta presencia de cobalto.
+
+
+Observamos que el Kriging esta uniforme pero anteriormente se verifico que el modelo de variograma se ha ajustado adecuadamente ademas en la descriptiva tambien notamo que si hay variabilidad en los datos. El kriging no se ajusta a los datos correctamente.
+
+## Disyuntivo
+
+El kriging disyuntivo es una técnica avanzada de geoestadística que extiende las capacidades del kriging ordinario para manejar situaciones en las que la relación entre la variable regionalizada y sus predicciones es más compleja que una simple media local. Aquí te doy una explicación detallada sobre el kriging disyuntivo, su modelo, y su aplicación.
+
+**Modelo del Kriging Disyuntivo**
+
+El modelo básico del kriging disyuntivo presupone que la función de la variable de interés \( Z(s) \) en una ubicación espacial \( s \) puede ser descrita como:
+
+\[
+f(Z(s)) = \mu_1 + \epsilon(s)
+\]
+
+Donde:
+- \( f(Z(s)) \) es una función arbitraria de \( Z(s) \), que puede ser cualquier transformación de los datos.
+- \( \mu_1 \) es una constante desconocida (a menudo interpretada como la media de la función transformada).
+- \( \epsilon(s) \) es un término de error que captura la variabilidad espacial alrededor de la media.
+
+ **Funciones de Transformación \( f(Z(s)) \)**
+
+Una característica clave del kriging disyuntivo es la flexibilidad en la elección de la función de transformación \( f(Z(s)) \). Una función comúnmente utilizada es el indicador:
+
+\[
+f(Z(s)) = I(Z(s) > c_t)
+\]
+
+Donde \( I(Z(s) > c_t) \) es una función indicadora que toma el valor de 1 si \( Z(s) \) supera un umbral \( c_t \), y 0 en caso contrario. En este sentido, el kriging disyuntivo puede considerarse una generalización del kriging indicativo, donde \( f(Z(s)) \) se reduce a una simple función indicadora.
+
+ **Aplicaciones del Kriging Disyuntivo**
+
+- **Predicción del Valor**: En el contexto de predicción directa, \( f(Z(s)) \) podría simplemente ser la propia variable \( Z(s) \). En este caso, el kriging disyuntivo podría comportarse de manera similar al kriging ordinario, pero con mayor flexibilidad para captar relaciones más complejas.
+- **Predicción de Indicadores**: Utilizando la función indicadora, el kriging disyuntivo permite predecir la probabilidad de que \( Z(s) \) exceda un determinado umbral. Esto es útil en aplicaciones donde se desea predecir la ocurrencia o no ocurrencia de un evento, como la presencia de contaminación por encima de un nivel crítico.
+
+**Suposiciones del Kriging Disyuntivo**
+
+- **Normalidad Bivariante**: El kriging disyuntivo requiere que los datos transformados \( f(Z(s)) \) sigan una distribución normal bivariante. Esto significa que cualquier par de datos transformados \( (f(Z(s_i)), f(Z(s_j))) \) debe seguir una distribución conjunta normal. Este es un supuesto fuerte y, a menudo, difícil de verificar en la práctica.
+- **Función de Covarianza**: El modelo también se basa en la covarianza o el semivariograma de los datos transformados, que describe cómo varían los valores en función de la distancia entre ubicaciones espaciales.
+
+
+El kriging disyuntivo es una técnica poderosa que extiende el kriging ordinario al permitir predicciones basadas en funciones arbitrarias de la variable regionalizada, como la función indicadora. Si bien ofrece ventajas en términos de flexibilidad y precisión, también introduce desafíos adicionales en términos de suposiciones y complejidad matemática. En aplicaciones donde se desea predecir la ocurrencia de eventos específicos o modelar relaciones más complejas.
+
+```{r}
+# Cargar el dataset 'jura' del paquete 'gstat'
+data(jura)
+
+# Verificar y convertir a SpatialPointsDataFrame si es necesario
+if (!inherits(jura.pred, "SpatialPointsDataFrame")) {
+  coordinates(jura.pred) <- ~Xloc + Yloc
+}
+
+# Ajustar un modelo de variograma
+vgm_model <- variogram(log(Co) ~ 1, data = jura.pred)  # Ajustar variograma para la variable Co (Cobalto)
+model_fit <- fit.variogram(vgm_model, vgm(0.24, "Exp", 0.46, 0.04))
+
+# Crear una cuadrícula para la predicción
+grd <- expand.grid(x = seq(min(jura.pred$Xloc), max(jura.pred$Xloc), length = 100),
+                   y = seq(min(jura.pred$Yloc), max(jura.pred$Yloc), length = 100))
+
+coordinates(grd) <- ~x+y
+gridded(grd) <- TRUE
+
+# Realizar Kriging
+kriging_result <- krige(Co ~ 1, jura.pred, grd, model = model_fit)
+
+# Convertir los resultados a un data frame para ggplot
+kriging_result_df <- as.data.frame(kriging_result)
+colnames(kriging_result_df) <- c("x", "y", "var1.pred", "var1.var")
+
+# Visualizar usando ggplot2
+ggplot(data = kriging_result_df, aes(x = x, y = y, fill = var1.pred)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  labs(title = "Kriging Disyuntivo No Lineal para Cobalto",
+       x = "X",
+       y = "Y",
+       fill = "Cobalto") +
+  theme_minimal()
+```
+Este gráfico muestra la distribución espacial de la concentración de cobalto los colores indican diferentes niveles de concentración, donde el amarillo representa áreas con alta concentración de cobalto y el púrpura áreas con baja concentración. El método utilizado es útil para capturar relaciones no lineales en la distribución espacial de los minerales.
+
+En general, revela una variabilidad significativa en la concentración de cobalto, con zonas específicas que presentan altos niveles de este metal. Esta información es valiosa tanto para la exploración minera como para estudios ambientales, ya que permite identificar áreas de interés o posibles impactos ambientales debido a la presencia de cobalto en la región.
+
+# Gráfico de Mora
+
+
+El gráfico de Moran visualiza la autocorrelación espacial para la variable _Cobalto (Co)_.
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", collapse=FALSE, eval=TRUE}
+
+# Convertir jura.pred a un objeto sf
+jura_sf <- st_as_sf(jura.pred, coords = c("Xloc", "Yloc"), crs = 21781)
+
+# Crear la matriz de vecinos con k = 4 más cercanos
+coords <- st_coordinates(jura_sf)
+knn <- knearneigh(coords, k = 4)
+nb <- knn2nb(knn)
+
+# Convertir la lista de vecinos en una matriz de pesos espaciales
+pesos <- nb2listw(nb, style = "W")
+
+# Calcular el I de Moran
+moran.plot(jura.pred$Co, pesos, pch = 20, col = "darkorchid4", 
+           main = "Gráfico de Moran: Concentración de Cobalto")
+
+
+```
+
+En los cuatro cuadrantes se puede identificar diferentes parones de autocorrelación espacial. Observe con atención que en el primer cuadrante (superior derecho) valores altos de concentración de Cobalto rodeados por otros valores altos, se identifica una autocorrelación directamente proporcional y positiva. En el tercer cuadrante (inferior izquierdo) se aprecian valores bajos de concentración rodeados por otros valores bajos, indica una fuerte autocorrelación pero inversa. Por otro lado, en el segundo cuadrante (superior izquierdo) valores bajos rodeados por valores altos, indica autocorrelación negativa. Sin embargo, hay menos puntos en estos cuadrantes, lo que sugiere que la autocorrelación espacial negativa no es significativa en esta  variable. Por ultimo, Cuarto cuadrante (inferior derecho) valores altos de concentración de Cobalto rodeados por valores bajos. Indica autocorrelación negativa. Sin embargo, hay menos puntos en estos cuadrantes, lo que sugiere que la autocorrelación espacial negativa no es significativa en esta variable.
+
+Lo puntos que están etiquetados con números de ID por ejemplo, 58, 163, 225, etc. Estos son observaciones que pueden tener comportamientos atípicos o ser influyentes en la autocorrelación espacial.
+
+
+## Evaluacion de la Autocorrelacion Espacial
+
+$H_0:$  No hay autocorrelacion espacial.(los valores estan distribuidos aleatoriamente)
+
+$H_1:$  Existe autocorrelacion espacial. (los valores cercanos estan mas relacionados que los valores distantes).
+
+```{r}
+moran.test(jura_sf$Co, pesos)
+```
+**Conclucion**  Existe suficiente evidencia estadistica para concluir que existe autocorrelacion espacial ya que el $P_{valor}$ es significativo.
+lo que significa que existe autocorrelacion, el indice de moran es *0.69*  El valor positivo de 0.6914 indica que existe una autocorrelación espacial positiva significativa en los datos de concentraciones de cobalto (Co). En otras palabras, las áreas geográficas con concentraciones altas de cobalto tienden a estar rodeadas por otras áreas con concentraciones igualmente altas, y lo mismo ocurre con las áreas de baja concentración.
+
+
+
+El test de Moran's I muestra una fuerte evidencia de autocorrelación espacial positiva lo que concuerda con el grafico de moran. Esto significa que las concentraciones de cobalto no están distribuidas aleatoriamente en el espacio, sino que tienden a agruparse en patrones espaciales, con áreas de alta concentración de cobalto cerca de otras áreas de alta concentración, y lo mismo para áreas de baja concentración.
+
+# Modelos espaciales
+
+## Ajuste de modelos espaciales autorregresivos
+
+Para tener en cuenta todas la variables en el modelo las 2 variables categoricas la volvemos dummies
+```{r,echo=FALSE}
+data(jura)
+jura.pred$Forest=ifelse(jura.pred$Landuse== "Forest",1,0)
+jura.pred$Pasture=ifelse(jura.pred$Landuse== "Pasture",1,0)
+jura.pred$Meadow=ifelse(jura.pred$Landuse== "Meadow",1,0)
+
+#######################################
+jura.pred$Argovian=ifelse(jura.pred$Rock== "Argovian",1,0)
+jura.pred$Kimmeridgian=ifelse(jura.pred$Rock== "Kimmeridgian",1,0)
+jura.pred$Sequanian=ifelse(jura.pred$Rock== "Sequanian",1,0)
+jura.pred$Portlandian=ifelse(jura.pred$Rock== "Portlandian",1,0)
+
+
+jura.pred<-jura.pred[,-c(5,6)]
+head(jura.pred)
+```
+
+
+### Modelo SAR (Spatial Autoregressive Model)
+
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', collapse=FALSE, eval=TRUE}
+
+# modelo SAR con Cobalto como variable dependiente
+modelo_sar <- lagsarlm(Co ~ Cd + Zn + Cr + Cu + Ni + Pb+Forest+Pasture 
+                       +Meadow +Argovian +Kimmeridgian +Sequanian +Portlandian, data = jura.pred, listw = pesos)
+summary(modelo_sar)
+
+```
+
+
+
+### Modelo SEM (Spatial Error Model)
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', collapse=FALSE, eval=TRUE}
+# modelo SEM con Cobalto como variable dependiente
+modelo_sem <- errorsarlm(Co ~ Cd + Zn + Cr + Cu + Ni + Pb+Forest+Pasture 
+                       +Meadow +Argovian +Kimmeridgian +Sequanian +Portlandian, data = jura.pred, listw = pesos)
+summary(modelo_sem)
+```
+
+
+
+### Modelo SARMA (Spatial Autoregressive Moving Average Model)
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', collapse=FALSE, eval=TRUE}
+#modelo SARMA con Cobalto como variable dependiente
+modelo_sarma <- sacsarlm(Co ~ Cd + Zn + Cr + Cu + Ni + Pb+Forest+Pasture 
+                       +Meadow +Argovian +Kimmeridgian +Sequanian +Portlandian, data = jura.pred, listw = pesos)
+summary(modelo_sarma)
+
+```
+
+
+
+### Modelo SDM (Spatial Durbin Model)
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', collapse=FALSE, eval=TRUE}
+#modelo SDM con Cobalto como variable dependiente
+modelo_sdm <- lagsarlm(Co ~ Cd + Zn + Cr + Cu + Ni + Pb+Forest+Pasture 
+                       +Meadow +Argovian +Kimmeridgian +Sequanian +Portlandian, data = jura.pred, listw = pesos, type = "Durbin")
+summary(modelo_sdm)
+
+```
+
+
+
+### Modelo DEM (Durbin Error Model)
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, include=TRUE, comment="", fig.align='center', collapse=FALSE, eval=TRUE}
+#modelo DEM con Cobalto como variable dependiente
+modelo_dem <- errorsarlm(Co ~ Cd + Zn + Cr + Cu + Ni + Pb+Forest+Pasture 
+                       +Meadow +Argovian +Kimmeridgian +Sequanian +Portlandian, data = jura.pred, listw = pesos, etype = "emixed")
+summary(modelo_dem)
+```
+
+
+De acuerdo a el ajuste de los modelos espaciales autoregresivos se puede observar que el mejor modelo que explica la concetraciones de Cobalto en función de los demas minerales presentes; es el Mdelo SEM (Spatial Error Model) ya que, el AIC observado y constractado con los demas modelos autoregresivos es considerable menor. Cabe resaltar que este valor posee un grado de similitud entre los valores del modelo SARMA; quien presenta una diferencia decimal de tres unidades. Ademas variables como Cd, Ni y Pb tienen una relación significativa con Co
