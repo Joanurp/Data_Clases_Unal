@@ -1,0 +1,242 @@
+---
+title: \textbf{Diseño de Experimentos Completamente Aleatorizado}
+subtitle: Universidad Nacional de Colombia Sede de La Paz
+author: "Jose Angel Urquijo Parra"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+         - Config.txt     # Configuracion de pie, encabezado y usepackge
+  
+---
+
+
+```{r setup, include=FALSE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+
+
+# \textcolor{blue}{Diseño de Completamente Aleatorizado DCA}
+
+```{r Librerias}
+library(agricolae)
+library(emmeans)
+library(ggplot2)
+```
+
+```{r}
+y<-c(740,430,760,640,545,440,390,325,290,740,630,870,605,505,430,540)
+ttos<-factor(rep(1:5,c(4,3,2,3,4)),labels = c("V1","V2","V3","V4","V5"))
+Datos<-data.frame(ttos,y)
+```
+
+
+## Distribución de la Variabilidad - Boxplot
+
+```{r}
+ggplot(Datos, aes(x=ttos,y=y)) + geom_boxplot(aes(fill=ttos),show.legend=F)+ 
+  stat_boxplot(geom ='errorbar')+xlab("Variedades  de Lentejas") + 
+  ylab("Producción")+stat_summary(fun.y=mean, geom="point", shape=18,size=3, color="red")
+```
+
+
+## Prueba ANAVA
+
+```{r}
+n <- length(y);n
+y.. <- sum(y);y..
+yb.. <- mean(y);yb..
+```
+
+
+```{r}
+#Factor de corrección
+FC <- n*(yb..^2) ;FC
+```
+
+
+```{r}
+# Repeticiones
+rj <- tapply(y,ttos,length);rj
+```
+
+
+```{r}
+#totales por tratamientos
+y.j <- tapply(y,ttos,sum);y.j
+```
+
+
+```{r}
+#medias por tratamientos
+yb.j <- tapply(y,ttos,mean);yb.j
+round(yb.j,1)
+```
+
+```{r}
+t <- length(y.j)
+SCT <- sum(y^2)-FC
+SCtto <- sum((y.j^2)/rj)-FC
+SCE <- SCT-SCtto
+CMtto <- SCtto/(t-1)
+CME <- SCE/(n-t)
+Fc <- CMtto/CME
+```
+
+
+
+```{r}
+library(knitr)
+library(gridExtra)
+library(dplyr)
+```
+
+
+```{r}
+anova_table <- data.frame(
+  Fuente_de_Variación = c("Tratamientos", "Error", "Total"),
+  Suma_de_Cuadrados = c(SCtto, SCE, SCT),
+  Grados_de_Libertad = c(t-1, n-t, n-1),
+  Cuadrados_Medios = c(CMtto, CME, NA),
+  F = c(Fc, NA, NA)
+)
+
+anova_table <- anova_table %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+
+anova_table %>%
+  kable(main = "Tabla de ANOVA", )
+```
+
+## Estadistico Calculado y Tabulado
+
+```{r}
+Ft<-qf(1-0.05,t-1,n-t); Ft
+round(Ft,2)
+
+Fc>Ft
+```
+# \textcolor{blue}{Validación de Supuestos en un Diseño completamente Aleatorizado}
+
+**1. Los errores se distribuyen normal con media cero y varianza  $\sigma^{2}$ constante.**
+
+## Prueba de Normalidad
+
+\begin{equation*}
+\begin{cases}
+H_{0}:=& \text{Los datos provienen de una distribución normal} ,\\
+H_{alt}:=& \text{Los datos no provienen de una distribución normal}
+\end{cases}
+\end{equation*}
+
+### modelo de Análisis de Varianza (ANOVA) 
+
+```{r}
+mod<-aov(y~ttos,data=Datos)
+
+```
+
+
+```{r, echo=TRUE}
+# Shapiro-Wilk normality test
+# H0: los residuales provienen de una población con distribución normal
+# H1: no provienen de una población con distribución normal
+shapiro.test(mod$residuals) 
+
+# como el p-valor > 0.05 no se rechaza Ho, 
+# es decir los residuales del modelo ajustado
+# siguen una distribucion normal. 
+```
+
+**2. Homogeneidad de las varianzas de los tratamientos.**
+
+
+```{=tex}
+\begin{equation*}
+\begin{cases}
+H_{0}:=& \text{Varianzas homogéneas} ,\\
+H_{alt}:=& \text{Varianzas No homogéneas}
+\end{cases}
+\end{equation*}
+```
+
+
+## Bartlett test of homogeneity of variances
+
+```{r, echo=TRUE}
+bartlett.test(y~ttos,data=Datos)
+```
+
+
+
+# \textcolor{blue}{Diferencias Mínimas Significativas}
+
+```{r, echo=TRUE}
+#El método de la diferencia mínima significativa (DMS)
+LSD<-LSD.test(mod,"ttos",group=T,p.adj="none",console=TRUE)
+plot(LSD,variation="SD")
+```
+
+## Prueba Tukey HSD (Honestly Significant Difference) 
+
+```{r}
+
+# Extraer los cuadrados medios del error
+mse <- summary(mod)[[1]]["Residuals", "Mean Sq"]
+
+# Número de tratamientos (factores)
+k <- length(unique(Datos$ttos))
+
+# Número total de observaciones
+n <- nrow(Datos)
+
+# Número de observaciones por grupo (suponiendo que son iguales)
+r <- table(Datos$ttos)[1]
+
+# Grados de libertad del error
+df_error <- summary(mod)[[1]]["Residuals", "Df"]
+
+# Nivel de significancia
+alpha <- 0.05
+
+# Valor crítico de Tukey (HSD)
+q_crit <- qtukey(1 - alpha, k, df_error)
+
+# Calcular la diferencia mínima significativa (DMS)
+dms <- q_crit * sqrt(mse / r)
+
+# Obtener las medias de los tratamientos
+means <- tapply(Datos$y, Datos$ttos, mean)
+
+# Calcular todas las diferencias entre pares
+pairs <- combn(names(means), 2, simplify = FALSE)
+results <- sapply(pairs, function(pair) {
+  mean_diff <- abs(means[pair[1]] - means[pair[2]])
+  list(pair = pair, mean_diff = mean_diff, significant = mean_diff > dms)
+})
+
+
+results_df <- do.call(rbind, lapply(results, function(res) {
+  data.frame(pair = paste(res$pair[1], "vs", res$pair[2]),
+             mean_diff = res$mean_diff,
+             significant = res$significant)
+}));results_df
+
+```
+
+
+
+
