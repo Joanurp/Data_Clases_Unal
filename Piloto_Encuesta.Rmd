@@ -1,0 +1,107 @@
+---
+title: \textbf{Asociación entre el Uso de Anticonceptivos Hormonales y el Riesgo de Obesidad en Usuarias}
+subtitle:
+author: ""
+date: 
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+       # - Config.txt     # Configuracion de pie, encabezado y usepackge
+  
+---
+
+
+```{r setup, include=FALSE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+
+### \textcolor{blue}{Sección 1: Información General}
+
+1. **Edad**: _____ años
+
+2. **Altura**: _____ cm
+
+3. **Peso Actual**: _____ kg
+
+4. **Índice de Masa Corporal (IMC)**: (Si no lo conoces, puedes dejarlo en blanco) _____
+
+5. **Nivel de Actividad Física**:
+   - ☐ Sedentaria (poca o ninguna actividad física)
+   - ☐ Actividad ligera (ejercicio ocasional)
+   - ☐ Moderadamente activa (ejercicio regular)
+   - ☐ Muy activa (ejercicio intenso)
+
+### \textcolor{blue}{Sección 2: Uso de Anticonceptivos}
+
+6. **¿Actualmente usas anticonceptivos hormonales?**  
+   - ☐ Sí  
+   - ☐ No (Si no, finaliza la encuesta aquí)
+
+7. **¿Qué tipo de anticonceptivo hormonal usas?**  
+   - ☐ Píldoras anticonceptivas
+   - ☐ Parche hormonal
+   - ☐ Inyección anticonceptiva
+   - ☐ Implante subdérmico
+   - ☐ Dispositivo intrauterino hormonal (DIU hormonal)
+   - ☐ Otro (especifica): __________
+
+8. **¿Cuánto tiempo llevas usando anticonceptivos hormonales?**
+   - ☐ Menos de 6 meses
+   - ☐ 6 meses a 1 año
+   - ☐ 1 a 2 años
+   - ☐ Más de 2 años
+
+### \textcolor{blue}{Sección 3: Cambios en el Peso}
+
+9. **¿Has notado algún cambio en tu peso desde que comenzaste a usar anticonceptivos hormonales?**
+   - ☐ No he notado ningún cambio
+   - ☐ He perdido peso
+   - ☐ He mantenido mi peso
+   - ☐ He ganado peso
+
+10. **Si has ganado o perdido peso, ¿cómo describirías el cambio?**
+    - ☐ Cambio leve (1-3 kg)
+    - ☐ Cambio moderado (4-6 kg)
+    - ☐ Cambio significativo (más de 6 kg)
+    - ☐ No aplica
+
+11. **¿Cuánto tiempo después de comenzar a usar anticonceptivos hormonales notaste el cambio en tu peso?**
+    - ☐ Menos de 3 meses
+    - ☐ 3 a 6 meses
+    - ☐ Más de 6 meses
+    - ☐ No he notado un cambio
+
+### \textcolor{blue}{Sección 4: Factores Adicionales}
+
+12. **¿Crees que otros factores (como cambios en la dieta, el nivel de estrés o la actividad física) han influido en tu peso durante el tiempo que has estado usando anticonceptivos hormonales?**  
+    - ☐ Sí  
+    - ☐ No  
+    - ☐ No estoy segura
+
+13. **¿Fumas regularmente?**
+    - ☐ Sí
+    - ☐ No
+
+14. **¿Has hecho cambios significativos en tu dieta desde que comenzaste a usar anticonceptivos hormonales?**
+    - ☐ Sí  
+    - ☐ No  
+    - ☐ No estoy segura
+
+15. **¿Consideras que el uso de anticonceptivos hormonales ha tenido un impacto positivo, negativo o neutral en tu salud general?**
+    - ☐ Positivo
+    - ☐ Negativo
+    - ☐ Neutral
+
