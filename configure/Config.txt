@@ -26,7 +26,7 @@
 \fancyhead{} % Limpia la configuración previa del encabezado
 \fancyhead[R]{%
   \ifnum\value{page}=1
-    \centering\includegraphics[width=3.5cm]{Logo-unal.png} % ruta al archivo de tu logo
+    \centering\includegraphics[width=3.5cm]{../configure/Logo-unal.png} % ruta al archivo de tu logo
   \fi
 }
 \renewcommand{\headrulewidth}{0pt} % Elimina la línea horizontal del encabezado
