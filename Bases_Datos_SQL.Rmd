@@ -293,7 +293,145 @@ ORDER BY
 
 
 
+```{sql connection= conexion1, eval = FALSE}
+CREATE TABLE productos (
+    id_producto INT,
+    nombre VARCHAR(50)
+);
+```
 
+```{sql connection= conexion1, eval = FALSE}
+-- Insertar datos en la tabla productos
+INSERT INTO productos (id_producto, nombre) VALUES (2, 'peras');
+```
+
+
+```{sql connection= conexion1, eval = FALSE}
+INSERT INTO productos (id_producto, nombre) VALUES (3, 'Naranjas');
+```
+
+
+```{sql connection= conexion1, eval = FALSE}
+INSERT INTO productos (id_producto, nombre) VALUES (3, 'Aceitunas');
+```
+
+
+```{sql connection= conexion1, eval = FALSE}
+INSERT INTO productos (id_producto, nombre) VALUES (5, 'Kiwi');
+```
+
+
+```{sql connection= conexion1, eval = FALSE}
+INSERT INTO productos (id_producto, nombre) VALUES (6, 'melón');
+```
+
+
+```{sql connection= conexion1, eval = FALSE}
+INSERT INTO productos (id_producto, nombre) VALUES (6, 'Sandia');
+
+```
+
+```{sql connection= conexion1, main = "Productos"}
+
+SELECT * FROM productos;
+
+```
+
+
+
+```{sql connection= conexion1, eval = FALSE, eval = FALSE}
+CREATE TABLE ubicaciones (
+    id_producto INT,
+    provincia VARCHAR(50)
+);
+
+```
+
+
+```{sql connection= conexion1, eval = FALSE}
+-- Insertar datos en la tabla ubicaciones
+INSERT INTO ubicaciones (id_producto, provincia) VALUES (2, 'Huelva');
+```
+
+
+```{sql connection= conexion1, eval = FALSE}
+INSERT INTO ubicaciones (id_producto, provincia) VALUES (3, 'Cordoba');
+```
+
+
+```{sql connection= conexion1, eval = FALSE}
+INSERT INTO ubicaciones (id_producto, provincia) VALUES (6, 'Cadiz');
+```
+
+
+```{sql connection= conexion1, eval = FALSE}
+INSERT INTO ubicaciones (id_producto, provincia) VALUES (7, 'Sevilla');
+
+```
+
+
+```{sql connection= conexion1, main = "Ubicaciones"}
+
+
+SELECT * FROM ubicaciones;
+
+```
+
+
+
+```{sql connection= conexion1, main = "ENER JOIN"}
+
+-- Left Join datos de las tablas (productos, ubicacion)		
+	
+SELECT p.id_producto, p.nombre, u.id_producto, u.provincia
+FROM productos p
+INNER JOIN ubicaciones u
+ON p.id_producto = u.id_producto;
+
+```
+
+
+```{sql connection= conexion1, main = "Datos Nulos 1"}
+
+SELECT p.id_producto, p.nombre, u.id_producto, u.provincia
+FROM productos p
+LEFT JOIN ubicaciones u
+ON p.id_producto = u.id_producto;
+
+
+```
+
+
+
+```{sql connection= conexion1, main = "Datos Nulos 2"}
+
+SELECT p.id_producto, p.nombre, u.id_producto, u.provincia
+FROM productos p
+RIGHT JOIN ubicaciones u
+ON p.id_producto = u.id_producto;
+
+
+```
+
+```{sql connection= conexion1, main = "Datos Nulos 2"}
+
+SELECT p.id_producto, p.nombre, u.id_producto, u.provincia
+FROM productos p
+FULL JOIN ubicaciones u
+ON p.id_producto = u.id_producto;
+
+
+```
+
+
+
+```{sql connection= conexion1, main = "Datos Nulos 2"}
+
+SELECT p.id_producto, p.nombre, u.id_producto, u.provincia
+FROM productos p
+CROSS JOIN ubicaciones u;
+
+```
 
 
 
