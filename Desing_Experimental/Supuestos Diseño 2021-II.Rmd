@@ -1,0 +1,576 @@
+---
+title: "Supuestos DCA 2024-I"
+author: "O. Elias Bru-Cordero"
+date: "27/08/2024"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Validación de los supuestos del modelo
+
+Luego de la formulación de un modelo y realizar su ajuste, el paso
+siguiente es la validación de los supuestos de este que permiten
+verificar si dicho modelo es correcto y así las conclusiones del ajuste
+son buenas. Entre estos supuestos encontramos:
+
+```{=tex}
+\begin{itemize}
+ \item [1.] Los errores se distribuyen normal con media cero y varianza  $\sigma^{2}$ constante.
+\item [2.] Homogeneidad de las varianzas de los tratamientos.
+\item [3.] Aditividad o linealidad en los parámetros del modelo. 
+\end{itemize}
+```
+## Prueba de Normalidad
+
+\begin{equation*}
+\begin{cases}
+H_{0}:=& \text{Los datos provienen de una distribución normal} ,\\
+H_{alt}:=& \text{Los datos no provienen de una distribución normal}
+\end{cases}
+\end{equation*} Entre estas pruebas encontramos:
+
+-   Prueba de Shapiro-Wilk.
+-   Prueba de Angostino.
+-   Entre otras.
+
+## Prueba de Homogeneidad de varianza
+
+```{=tex}
+\begin{equation*}
+\begin{cases}
+H_{0}:=& \sigma^{2}_{1}=\sigma^{2}_{2}=\cdots =\sigma^{2}_{t} ,\\
+\\
+H_{alt}:=& \sigma^{2}_{i}\neq \sigma^{2}_{j}
+\end{cases}
+\end{equation*}
+```
+## Entre estas pruebas encontramos:
+
+-   Prueba F-Max de Hartley
+-   Prueba de Bartlett
+-   Prueba de Cochran
+-   Prueba de Box
+-   Prueba de Levene
+-   Prueba de Burr Foster
+
+## Prueba de F-Máx de Hartley
+
+### **Características**
+
+-   Es sensible a la no normalidad de los datos.
+-   Requiere que todas las muestran sean del mismo tamaño, esto es,
+    $r_{1}=r_{2}=\dots=r_{t}=r.$
+-   Asume que las poblaciones son normales e independientes.
+-   **Estadístico de prueba**:
+    $$F_{max}=\dfrac{\text{máx}(S^{2}_{i})}{\text{mín}(S^{2}_{i})}$$ con
+    $S^{2}_{i}$ la varianza muestral del $i$-ésimo tratamiento, con
+    $i=1,2,\dots, t$
+-   **Criterio de rechazo**: se rechaza $H_{0}$ si
+    $F_{max}>F_{tabulado}(t,r-1),$ en caso de que el número de
+    repeticiones por tratamientos es diferente entonces en el criterio
+    de rechazo se utiliza\
+    $F_{max}>F_{tabulado}(t,v),$ con $v=\text{máx}(r_{j})-1$
+
+## Prueba de Bartlett
+
+-   **Características**
+
+-   Se recomienda cuando el número de replicas por tratamiento es mayor
+    o igual a 3.
+
+-   No requiere que las repeticiones sean iguales.
+
+-   Sensible a la no normalidad de los datos (particularmente a la
+    curtosis).
+
+-   **Estadístico de prueba**:
+    $$U=\dfrac{1}{C}\left(\sum\limits_{j=1}^{t}(r_{j}-1)\ln(S^{2})-\sum\limits_{j=1}^{t}(r_{j}-1)\ln(S_{j}^{2})\right)$$
+    donde $S^{2}_{i}$ la varianza muestral del $i$-ésimo tratamiento,
+    con $i=1,2,\dots, t$
+    $$S^{2}=\dfrac{\sum\limits_{j=1}^{t}(r_{j}-1)S_{j}^{2}}{\sum\limits_{j=1}^{t}(r_{j}-1)}$$
+    $$C=1+\dfrac{1}{3(t-1)}\left(\sum\limits_{j=1}^{t}\dfrac{1}{r_{j}-1}-\dfrac{1}{\sum\limits_{j=1}^{t}(r_{j}-1)}\right)$$
+
+-   **Criterio de rechazo**: se rechaza $H_{0}$ si
+    $$U>\chi^{2}(\alpha,t-1)$$
+
+## Prueba de Cochran
+
+-   **Estadístico de prueba:**
+    $$C=\dfrac{\text{máx}(S^{2}_{i})}{\sum\limits_{j=1}^{t}S_{j}^{2}}$$
+    donde $S^{2}_{i}$ la varianza muestral del $i$-ésimo tratamiento,
+    con $i=1,2,\dots, t$
+-   **Criterio de rechazo**: se rechaza $H_{0}$ si
+    $$C>C_{\text{tabulado}(1-\alpha)}(t,r-1)$$
+
+## Prueba de Levene
+
+Levene propuso efectuar un análisis de varianza simple sobre las
+variables $Z_{ij}=\mid y_{ij}-\overline{y}_{.j} \mid$ con
+$\overline{y}_{.j}$ la media muestral del $j$-ésimo tratamiento o
+$Z_{ij}=\mid y_{ij}-Med_{.j} \mid$ con $Med_{.j}$ la mediana del
+$j$-ésimo tratamiento. El estadístico de prueba está dado por:
+$$W=\dfrac{(N-t)\sum\limits_{j=1}^{t} r_{j}(\overline{Z}_{j.}-\overline{Z}_{..})^{2}}{(t-1)\sum\limits_{j=1}^{t}\sum\limits_{i=1}^{r_{j}}(Z_{ij}-\overline{Z}_{i.})^{2}}$$
+
+donde $\overline{Z}_{..}$ es la media global de $Z_{ij}$ y
+$\overline{Z}_{j.}$ es la media del $j$-ésimo tratamiento de los
+$Z_{ij}.$\
+Se rechaza $H_{0}:=\sigma^{2}_{1}=\sigma^{2}_{2}=\cdots \sigma^{2}_{t}$
+a un nivel de significancia $\alpha$ si $W>F_{\alpha}(t-1,N-t)$ valor
+crítico de la distribución $F$ con $t-1$ grados de libertad en el
+numerador y $N-t$ grados de libertad en el denominador.
+
+## Pruebas de comparaciones múltiples de medias
+
+Se presentan diferentes pruebas de comparación múltiple con el fin de
+tomar decisiones, una vez la hipótesis general sobre igualdad de
+tratamientos ha sido rechazada. Estas pruebas se realizan después de
+haber elaborado el análisis de varianza, con el fin de determinar que
+tratamientos o grupo de tratamientos son distintos o iguales entre sí.
+El interés al realizar las pruebas de comparaciones multiples, recaé en
+contrastar el siguiente juego de hipótesis:
+
+\begin{equation*}
+\begin{cases}
+H_{0}:=&\mu_{i}=\mu_{j},\\
+\\
+H_{alt}:=&\mu_{i}\neq\mu_{j}\quad i\neq j
+\end{cases}
+\end{equation*}\\end{equation\*} Estas pruebas de comparaciones
+multiples de medias pueden ser \textsl{planeadas} o
+\textsl{no planeadas.}
+
+## Pruebas planeadas
+
+Las pruebas planeadas son aquellas en las cuales el investigador planea
+las comparaciones que va a realizar antes de obtener los resultados del
+experimento. Entre estas pruebas encontramos:
+
+-   Contrastes: se definen como una combinación lineal de totales o
+    medias de tratamientos tales que $\sum_{i=1}^{t}c_{i}$ sea
+    cero.Estos se utilizan para realizar comparaciones donde las
+    variables son de tipo cualitativo.\\
+
+-   Ejemplo: se desea comparar las medias de dos tratamientos y se
+    plantea el juego de hipótesis de la siguiente manera:
+
+\begin{equation*}
+\begin{cases}
+H_{0}:=&\mu_{1}-\mu_{2}=0\\
+\\
+H_{alt}:=&\mu_{1}-\mu_{2}\neq 0
+\end{cases}
+\end{equation*} En este caso $c_{1}=1, c_{2}=-1$ y satisfacen
+$\sum_{i=1}^{t}c_{i}=0$\\ \\
+
+-   Ejemplo: se desea comparar las medias de tres tratamientos y se
+    plantea el juego de hipótesis de la siguiente manera:
+
+\begin{equation*}
+\begin{cases}
+H_{0}:=&2\mu_{1}-\mu_{2}-\mu_{3}=0\\
+\\
+H_{alt}:=&2\mu_{1}-\mu_{2}-\mu_{3}\neq 0
+\end{cases}
+\end{equation*} En este caso $c_{1}=2, c_{2}=c_{3}=-1$ y satisfacen
+$\sum_{i=1}^{t}c_{i}=0$\\ \\\
+\textbf{Ejemplo:} se desea comparar las medias de cinco tratamientos y
+se plantea el juego de hipótesis de la siguiente manera:
+\begin{equation*}
+\begin{cases}
+H_{0}:=& 3\mu_{1}+3\mu_{2}=2\mu_{3}+2\mu_{4}+2\mu_{5}\\
+\\
+H_{alt}:=& 3\mu_{1}+3\mu_{2}\neq 2\mu_{3}+2\mu_{4}+2\mu_{5}
+\end{cases}
+\end{equation*} En este caso $c_{1}=c_{2}=3, c_{3}=c_{4}=c_{5}=-2$ y
+satisfacen $\sum_{i=1}^{t}c_{i}=0$\\
+
+\item
+
+Contrastes ortogonales: son contrastes independientes. El número de
+contrastes que se pueden realizar en un experimento es igual al número
+de tratamientos menos 1, es decir, $t-1$ con $t$ el número de
+tratamientos.\\ \\ Dos contrastes $Q_{1}=\sum_{j=1}^{t}c_{j}y_{.j}$\\ y
+$Q_{2}=\sum_{j=1}^{t}d_{j}y_{.j}$ son ortogonales si
+$$\sum_{j=1}^{t}c_{j}d_{j}=0$$
+
+-   Si dos contrastes $Q_{1}$ y $Q_{2}$ no son ortogonales se determina
+    el grado de correlación entre los contrastes utilizando la siguiente
+    expresión:
+    $$\rho_{ij}=\dfrac{\sum_{j=1}^{j}c_{j}d_{j}}{\sqrt{\sum_{j=1}^{t}c^{2}_{j}\sum_{j=1}^{t}d^{2}_{j}}}$$.
+
+-   Los contrastes se utilizan para realizar comparaciones donde el tipo
+    de variable es cualitativa.
+
+\item
+
+\textbf{Prueba de diferencia mínima significativa \textquotedblleft LDS\textquotedblright :}
+Después de realizar el ANAVA y con la prueba $F$ se rechaza la hipótesis
+nula $H_{0}:\mu_{1}=\mu_{2}=\dots=\mu_{t}$, el interés recaé en comparar
+las medias de los tratamientos en parejas, para determinar cual de los
+tratamientos es \textquotedblleft mejor\textquotedblright :El contraste
+a realizar es el siguiente: \begin{equation*}
+\begin{cases}
+H_{0}:=&\mu_{i}=\mu_{j}\\
+\\
+H_{alt}:=&\mu_{i}\neq \mu_{j}
+\end{cases}
+\end{equation*} Se rechaza $H_{0}$ en favor de $H_{alt}$ si
+
+### Diseño balanceado
+
+$$\mid \overline{y}_{i.}-\overline{y}_{j.}\mid >t_{\alpha/2}(gle)\sqrt{\frac{2CME}{r}}$$
+
+### Diseño desbalanceado
+
+$$\mid \overline{y}_{i.}-\overline{y}_{j.}\mid >t_{\alpha/2}(gle)\sqrt{CME\left(\frac{1}{r_{i}}+\frac{1}{r_{j}}\right)}$$
+
+# Post-ANAVA (pruebas de comparaciones múltiples)
+
+La prueba de Diferencia Mínima Significativa (DMS) es un método
+estadístico utilizado en el análisis de un Diseño Completamente
+Aleatorizado (DCA) para comparar las medias de diferentes tratamientos o
+grupos.
+
+**Después de realizar un análisis de varianza (ANOVA) en un DCA, la
+prueba DMS se aplica cuando se encuentra una diferencia significativa
+entre las medias de los tratamientos. Esta prueba permite identificar
+específicamente cuáles tratamientos difieren entre sí.**
+
+### Pasos para realizar la prueba DMS
+
+-   Identificar en la tabla de la $t$-Student $t_{\alpha/2}(gle)$
+
+-   Calcular $t_{\alpha/2}(gle)\sqrt{\frac{2CME}{r}}$
+
+-   Realizar la diferencia de los promedios dos a dos
+
+-   Identificar
+    $$\mid \overline{y}_{i.}-\overline{y}_{j.}\mid >t_{\alpha/2}(gle)\sqrt{\frac{2CME}{r}}$$
+
+    Entre las pruebas más utilizadas se encuentran: la diferencia mínima
+    significativa (DMS), Duncan, Tukey, Scheffe, Bonferroni, Dunnet.
+
+## Ejemplo 1
+
+A un ingeniero de desarrollo de productos le interesa determinar si el
+peso porcentual del algodón en una fibra sintética afecta la resistencia
+a la tensión. Para ello ha llevado a cabo un experimento completamente
+al azar con cinco niveles del peso porcentual del algodón y cinco
+réplicas.
+
+Los datos pueden ser ingresados de la siguiente manera:
+
+```{r, echo=TRUE}
+algodon = rep(c(15,20,25,30,35),5); algodon
+ALG = factor(algodon,labels = c("15%", "20%", "25%", "30%", "35%")); ALG
+RESI = c(7,12,14,19,7,7,17,18,25,10,
+         15,12,18,22,11,11,18,19,19,15,
+          9,18,19,23,11); RESI
+resist = data.frame(ALG,RESI)
+head(resist)
+```
+
+```{r, echo=TRUE}
+attach(resist) # tome los encabezados
+```
+
+Luego de llamar la base datos y fijar las variables con la función
+attach, realizamos estadística descriptiva para la variable resistencia
+(RESI).
+
+```{r, echo=TRUE}
+est_res = data.frame(
+Replicas = tapply(RESI, ALG, length),
+Promedio = tapply(RESI, ALG, mean),
+Varianza = tapply(RESI, ALG, var),
+Des_Estd = tapply(RESI, ALG, sd)
+)
+est_res
+```
+
+Seguidamene, se presenta un gráfico:
+
+```{r, echo=TRUE}
+plot(RESI ~ ALG)
+```
+
+Ahora, procedemos con la prueba de validación de supuestos:
+
+## Prueba de Normalidad de los errores.
+
+```{=tex}
+\begin{equation*}
+\begin{cases}
+H_{0}:=& \text{Los datos se distribuyen normal} ,\\
+H_{alt}:=& \text{Los datos no se distribuyen normal}
+\end{cases}
+\end{equation*}
+```
+Se presenta la gráfica de los Cuantiles vs. los residuales, para
+verificar que los puntos de la nube se encuentran muy cerca de la linea
+de regresión. Esto nos dará una sospecha de si los errores se
+distribuyen normal o no. Por último se realizará la prueba teórica.
+
+```{r, echo=TRUE}
+Mod_Lin = aov(RESI ~ ALG)
+Residuales = rstandard(Mod_Lin)
+par(mfrow=c(2,2))
+hist(Residuales)
+plot(density(Residuales))
+qqnorm(Residuales, ylab = "residuales")
+qqline(Residuales)
+shapiro.test(Residuales) # Shapiro-Wilk
+```
+
+-   Otras pruebas
+
+```{r, eval=FALSE}
+library(nortest)
+ad.test(Residuales) # Anderson-Darling
+cvm.test(Residuales) # Cramer-Von
+pearson.test(Residuales) # Lilliefors (Kolmogorov-Smirnov)
+sf.test(Residuales) # Shapiro-Francia
+```
+
+## Prueba de Homogeneidad de varianzas.
+
+```{=tex}
+\begin{equation*}
+\begin{cases}
+H_{0}:=& \text{Varianzas homogéneas} ,\\
+H_{alt}:=& \text{Varianzas No homogéneas}
+\end{cases}
+\end{equation*}
+```
+Se graficaran la variable respuesta vs. los residuales y los Valores
+ajustados vs. los residuales, para verificara que no se presentan ningún
+patrón especifico en la nueve de puntos. Esto nos indicará nos dará
+sospechas de si hay independencia en los errores y homogeneidad de
+varianzas respectivamente. Por último realizaremos las prueba teórica.
+
+```{r, echo=TRUE}
+par(mfrow=c(1,2))
+plot(RESI,Residuales)
+abline(h=0)
+valores.ajustados = fitted(Mod_Lin)
+plot(valores.ajustados, Residuales)
+abline(h=0)
+bartlett.test(RESI,ALG)
+```
+
+```{r, echo=TRUE}
+library(car)
+leveneTest(RESI, ALG)
+```
+
+```{r, eval=FALSE}
+library(lawstat)
+levene.test(RESI, ALG, location = "median", correction.method = "none")
+```
+
+En este paso se realizará el análisis de varianza, para probar si hay o
+efecto significativo de los porcentajes de algodón sobre la resistencia
+a la tensión. Para ello se debe plantear el siguiente juego de hipótesis
+
+```{=tex}
+\begin{equation*}
+\begin{cases}
+H_{0}:=& \tau_{j}=0; \: \forall j ,\\
+H_{alt}:=& \tau_{j}\neq0 \: \exists j
+\end{cases}
+\end{equation*}
+```
+```{r}
+ANAVA.Resist = Mod_Lin
+summary(ANAVA.Resist)
+```
+
+La prueba de comparaciones múltiples es posible realizarla, ya que se
+rechaza la hipótesis de del análisis de varianza (efecto significativo
+de los tratamientos sobre la variable respuesta). La hipótesis de
+comparaciones y las pruebas son:
+
+```{r}
+pairwise.t.test(RESI, ALG, p.adj = "bonf")
+```
+
+```{r}
+TukeyHSD(Mod_Lin)
+```
+
+```{r}
+library(agricolae)
+HSD.test(Mod_Lin, "ALG", console = TRUE)
+```
+
+```{r, eval=FALSE}
+duncan.test(Mod_Lin, "ALG", console = TRUE)
+LSD.test(Mod_Lin, "ALG", p.adj="bonferroni", console = TRUE)
+```
+
+## Ejemplo 2
+
+```{r}
+library(agricolae)
+library(emmeans)
+library(ggplot2)
+```
+
+## Variedad de lentejas
+
+```{r}
+y<-c(740,430,760,640,545,440,390,325,290,740,630,870,605,505,430,540)
+y
+ttos<-factor(rep(1:5,c(4,3,2,3,4)),labels = c("V1","V2","V3","V4","V5"))
+print(ttos)
+Datos<-data.frame(y,ttos);Datos
+```
+
+## Boxplot
+
+```{r}
+ggplot(Datos, aes(x=ttos,y=y)) + geom_boxplot(aes(fill=ttos),show.legend=F)+ 
+  stat_boxplot(geom ='errorbar')+xlab("Variedades  de Lentejas") + 
+  ylab("Producción")+stat_summary(fun.y=mean, geom="point", shape=18,size=3, color="red")
+
+```
+
+# ANAVA Paso a paso
+
+```{r}
+n<-length(y);n
+y..<-sum(y);y..
+yb..<-mean(y);yb..
+```
+
+# Factor de corrección
+
+```{r}
+FC<-n*(yb..^2) ;FC
+```
+
+# Repeticiones
+
+```{r}
+rj<-tapply(y,ttos,length);rj
+```
+
+# Totales por tratamientos
+
+```{r}
+y.j<-tapply(y,ttos,sum);y.j
+```
+
+# Medias por tratamientos
+
+```{r}
+yb.j<-tapply(y,ttos,mean);yb.j
+```
+
+# Número de tratamientos
+
+```{r}
+t<-length(y.j)
+```
+
+# Sumas de cuadrados
+
+```{r}
+SCT<-sum(y^2)-FC ;SCT
+SCtto<-sum((y.j^2)/rj)-FC ;SCtto
+SCE<-SCT-SCtto ;SCE
+```
+
+# Cuadrados medios
+
+```{r}
+CMtto<-SCtto/(t-1);CMtto
+CME<-SCE/(n-t);CME
+```
+
+# Estadístico F
+
+```{r}
+Fc<-CMtto/CME;Fc # Calculado 
+Ft<-qf(1-0.05,t-1,n-t) # tabulado 
+Fc>Ft
+```
+
+# ANAVA de forma directa
+
+```{r}
+mod<-aov(y~ttos,data=Datos)
+anova(mod)
+```
+
+## Validación de supuestos
+
+```{r, echo=TRUE}
+# Shapiro-Wilk normality test
+# H0: los residuales provienen de una población con distribución normal
+# H1: no provienen de una población con distribución normal
+shapiro.test(mod$residuals) 
+
+# como el p-valor > 0.05 no se rechaza Ho, 
+# es decir los residuales del modelo ajustado
+# siguen una distribucion normal. 
+```
+
+# Bartlett test of homogeneity of variances
+
+```{r, echo=TRUE}
+bartlett.test(y~ttos,data=Datos)
+```
+
+## Comparación múltiple:
+
+```{r, echo=TRUE}
+#El método de la diferencia mínima significativa (DMS)
+LSD<-LSD.test(mod,"ttos",group=T,p.adj="none",console=TRUE)
+plot(LSD,variation="SD")
+```
+
+## Tukey
+
+```{r, echo=TRUE}
+TUKEY<- HSD.test(mod,"ttos",group=TRUE,console=TRUE)
+TUKEY
+```
+
+## Gráfica
+
+```{r, echo=TRUE}
+plot(TUKEY,variation="SD")
+```
+
+## Prueba de Duncan
+
+```{r, echo=TRUE}
+DUNCAN<- duncan.test(mod, "ttos",group=T,console=TRUE)
+plot(DUNCAN,variation="SD")
+```
+
+### Ejemplo de Dunnett
+
+Ejemplo: La siguiente tabla presenta los resultados de un estudio de
+tres tratamientos para regular el nivel de glucosa en la sangre de
+pacientes diabéticos, utilizando un grupo control. Asuma que el estudio
+se llevó a cabo mediante un diseño completamente al azar y determine
+para un nivel de significancia del 5% si existen diferencias
+estadísticas entre los tratamientos aplicados y el tratamiento control,
+con respecto a los niveles de glucosa.
+
+![](images/TablaDunnett.png)
+
+```{r, echo=TRUE}
+# Consultar la prueba en R
+```
