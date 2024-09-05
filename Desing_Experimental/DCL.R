@@ -12,14 +12,14 @@ library(dplyr)
 
 # Datos
 data <- data.frame(
-  Periodo = rep(1:5, each = 5),
+  Periodo = factor(rep(1:5, each = 5)),
   Vaca = factor(rep(1:5, times = 5)),
-  Tratamiento = factor(c('A', 'B', 'C', 'D', 'E', 'C', 'D', 'A', 'E', 'B', 
+  Tratamiento = factor(c('A', 'B', 'C', 'D', 'E', 'C', 'D', 'E', 'A', 'B', 
                          'D', 'E', 'A', 'B', 'C', 'E', 'A', 'B', 'C', 'D', 
                          'B', 'C', 'D', 'E', 'A')),
-  Produccion = c(33, 34, 26, 34, 33, 30, 28, 24, 28, 28, 
-                 28, 28, 20, 31, 22, 31, 22, 18, 31, 31, 
-                 28, 22, 15, 30, 19)
+  Produccion = c(33.1, 34.4, 26.4, 34.6, 33.9, 30.7, 28.7, 24.9, 28.8, 28.0, 
+                 28.7, 28.8, 20.0, 31.9, 22.7, 31.4, 22.3, 18.7, 31.0, 21.3, 
+                 28.9, 22.3, 15.8, 30.9, 19.0)
 )
 View(data)
 # Mostrar los primeros registros del data frame
@@ -51,5 +51,11 @@ interaction.plot(data$Periodo, data$Tratamiento, data$Produccion,
                  main = "Interacción entre Periodo y Tratamiento",
                  xlab = "Periodo",
                  ylab = "Producción")
+
+
+TUKEY<- HSD.test(modelo,"Tratamiento",group=TRUE,console=TRUE)
+
+
+plot(TUKEY,variation="SD")
 
 
