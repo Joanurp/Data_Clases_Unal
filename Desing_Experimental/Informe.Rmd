@@ -1,0 +1,296 @@
+---
+title: \textbf{Informe semana ll Diseño de Experimentos}
+subtitle: Universidad Nacional de Colombia Sede de La Paz
+author: "Jose Angel Urquijo, Yuleydis Mejía, Shirleza Arías"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+         - ../configure/Config.txt     # Configuracion de pie, encabezado y usepackge
+  
+---
+
+
+```{r setup, include=FALSE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = TRUE,
+  include = TRUE
+)
+
+```
+
+
+\section{Constrastes Ortogonales}
+
+
+\[
+SC_{(Contraste)} = \frac{C_1^2}{r \sum_{i=1}^{t} C_{i1}^2} = \frac{(T_1 + T_2 - T_3 - T_4)^2}{r(C_{11}^2 + C_{21}^2 + C_{31}^2 + C_{41}^2)}
+\]
+
+
+Los contrastes ortogonales se utilizan cuando se tienen un conjunto de tratamientos cualitativos con estructura, de tal forma que es conveniente comparar un tratamiento contra el promedio de otros tratamientos o un conjunto de tratamientos contra otro conjunto de tratamientos. Es decir, se prueban hipótesis de la forma:
+
+\[
+H_0: 3T_1 - T_2 - T_3 - T_4 = 0 \quad \text{vs} \quad H_1: 3T_1 - T_2 - T_3 - T_4 \neq 0
+\]
+
+Esta hipótesis compara el efecto del tratamiento 1 contra el promedio de los efectos de los tratamientos 2, 3, 4.
+
+\[
+H_0: T_1 + T_2 - T_3 - T_4 = 0 \quad \text{vs} \quad H_1: T_1 + T_2 - T_3 - T_4 \neq 0
+\]
+
+Esta hipótesis compara el efecto conjunto del tratamiento 1 y 2 contra el efecto conjunto de los tratamientos 3 y 4.
+
+En general se prueban hipótesis de la forma:
+
+\[
+H_0: \sum_{i=1}^{t} \lambda_i t_i = 0 \quad \text{vs} \quad H_1: \sum_{i=1}^{t} \lambda_i t_i \neq 0; \quad \text{con} \quad \sum_{i=1}^{t} \lambda_i = 0
+\]
+
+A la combinación lineal de tratamientos \( \sum_{i=1}^{t} \lambda_i t_i \) se le llama contraste, en donde los \( \lambda_i \) son los coeficientes del contraste.
+
+Dos contrastes (C1 y C2) son ortogonales si:
+
+\[
+\sum_{i=1}^{t} \lambda_{i1} \lambda_{i2} = 0
+\]
+
+Por ejemplo, si los contrastes son:
+
+\[
+C_1 = T_1 + T_2 - T_3 - T_4
+\]
+\[
+C_2 = T_1 - T_2
+\]
+\[
+C_3 = T_3 - T_4
+\]
+
+Entonces la tabla de coeficientes de los contrastes es:
+
+\[
+\begin{array}{|c|c|c|c|c|}
+\hline
+ & T_1 & T_2 & T_3 & T_4 \\
+\hline
+C_1 & 1 & 1 & -1 & -1 \\
+C_2 & 1 & -1 & 0 & 0 \\
+C_3 & 0 & 0 & -1 & 1 \\
+\hline
+\end{array}
+\]
+
+Los contrastes \( C_1 \) y \( C_2 \) son ortogonales porque:
+
+\[
+\sum_{i=1}^{t} \lambda_{i1} \lambda_{i2} = \lambda_{11} \lambda_{12} + \lambda_{21} \lambda_{22} + \lambda_{31} \lambda_{32} + \lambda_{41} \lambda_{42} 
+\]
+\[
+= (1)(1) + (1)(-1) + (-1)(0) + (-1)(0) = 0
+\]
+
+
+\section{Transformaciones}
+
+
+### 1. **Transformación Logarítmica**
+Esta transformación se usa principalmente para estabilizar la varianza cuando los datos tienen una distribución asimétrica positiva o cuando existen grandes diferencias en las magnitudes de las observaciones.
+
+**Caso:** Supongamos que estamos estudiando el ingreso de una población donde los valores varían ampliamente. Aplicar una transformación logarítmica puede ayudar a estabilizar la varianza y hacer los datos más simétricos.
+
+\[
+y' = \log(y)
+\]
+
+**Ejemplo:** Un análisis de regresión que modela la relación entre el ingreso de una población y su nivel educativo podría beneficiarse de una transformación logarítmica si los ingresos tienen una fuerte dispersión y no siguen una distribución normal.
+
+### 2. **Transformación de Potencia (Box-Cox)**
+Se utiliza cuando no está claro cuál es la mejor transformación para estabilizar la varianza. Box-Cox busca encontrar una transformación óptima mediante una familia de transformaciones parametrizadas por \(\lambda\).
+
+**Caso:** Supongamos que estamos analizando el peso de productos y queremos estabilizar la varianza.
+
+\[
+y' = \frac{y^\lambda - 1}{\lambda} \quad \text{si} \quad \lambda \neq 0
+\]
+\[
+y' = \log(y) \quad \text{si} \quad \lambda = 0
+\]
+
+**Ejemplo:** En un estudio sobre el peso de distintos productos agrícolas, la transformación Box-Cox puede encontrar el valor de \(\lambda\) que mejor estabilice la varianza.
+
+### 3. **Transformación de Raíz Cuadrada**
+Se utiliza cuando los datos son conteos y están sesgados hacia la derecha. Es útil para transformar datos de Poisson o binomiales.
+
+**Caso:** Estudio del número de bacterias en una muestra. Si los conteos tienen una alta variabilidad, la transformación de raíz cuadrada puede reducir el sesgo.
+
+\[
+y' = \sqrt{y}
+\]
+
+**Ejemplo:** Un experimento que mide el número de bacterias en diferentes muestras de agua puede beneficiarse de esta transformación.
+
+### 4. **Transformación Inversa**
+Esta se aplica cuando los datos decrecen rápidamente o tienen un comportamiento hiperbólico.
+
+**Caso:** Si se está estudiando la velocidad de un proceso químico que disminuye rápidamente con el tiempo.
+
+\[
+y' = \frac{1}{y}
+\]
+
+**Ejemplo:** La velocidad de una reacción química que se ralentiza con el tiempo puede analizarse mejor mediante esta transformación, para capturar mejor los patrones de desaceleración.
+
+### 5. **Transformación Arcseno**
+Usada cuando los datos representan proporciones o porcentajes.
+
+**Caso:** Estudio del porcentaje de éxito de un tratamiento médico.
+
+\[
+y' = \arcsin(\sqrt{y})
+\]
+
+**Ejemplo:** En un estudio que evalúa la proporción de pacientes que responden a un tratamiento, la transformación arcseno puede ayudar a estabilizar la varianza de proporciones cercanas a 0 o 1.
+
+Sí, además de las transformaciones comunes mencionadas previamente, existen otras transformaciones útiles en diferentes contextos estadísticos. A continuación se presentan más ejemplos:
+
+### 6. **Transformación Logística (Logit)**
+Usada principalmente en modelos donde la variable dependiente es binaria o representa proporciones. Se aplica para modelar la relación entre una variable dependiente categórica (0 o 1) y una o más variables independientes.
+
+\[
+y' = \log\left(\frac{y}{1-y}\right)
+\]
+
+**Caso:** Estudio de la probabilidad de que un paciente desarrolle una enfermedad en función de ciertos factores de riesgo.
+
+**Ejemplo:** En regresión logística, la variable dependiente es una probabilidad, por lo que la transformación logit se utiliza para llevar los valores de \(y\) (proporciones) a una escala continua entre \(-\infty\) y \(\infty\).
+
+### 7. **Transformación Exponencial**
+Útil cuando se tienen datos que crecen exponencialmente, como en estudios de crecimiento poblacional o en economía.
+
+\[
+y' = e^y
+\]
+
+**Caso:** Si se está estudiando el crecimiento de una población o el aumento exponencial en los precios de un producto.
+
+**Ejemplo:** Para modelar el crecimiento exponencial de una población en ecología, se podría utilizar la transformación exponencial.
+
+### 8. **Transformación de Box-Tidwell**
+Una extensión del Box-Cox, pero aplicada de forma más flexible en modelos de regresión. Se usa para encontrar transformaciones óptimas para las variables independientes, en lugar de la variable dependiente.
+
+**Caso:** Si queremos modelar una relación no lineal entre una variable dependiente continua y una o más variables predictoras continuas.
+
+\[
+y' = X^\lambda
+\]
+
+**Ejemplo:** En un modelo de regresión múltiple, si una de las variables predictoras muestra una relación no lineal con la variable dependiente, la transformación de Box-Tidwell puede optimizar la forma de la relación.
+
+### 9. **Transformación de Johnson (Sistema de Johnson)**
+Se usa para transformar datos no normales a una distribución normal. Esta es más flexible que la transformación de Box-Cox y se utiliza para datos con diferentes grados de asimetría o curtosis.
+
+Existen tres familias de distribuciones: \(S_L\) (log-normal), \(S_B\) (bounded), y \(S_U\) (unbounded).
+
+\[
+y' = \gamma + \delta \cdot \log\left(\frac{y - \xi}{\lambda}\right)
+\]
+
+**Caso:** Estudio donde los datos tienen una distribución altamente asimétrica y es necesario transformarlos a una forma normal para aplicar modelos estadísticos clásicos.
+
+**Ejemplo:** En finanzas, si se analiza la rentabilidad de activos que no sigue una distribución normal, el sistema de Johnson puede transformar estos datos para que sean más adecuados para un análisis basado en la normalidad.
+
+### 10. **Transformación Raíz Cuadrada Inversa**
+Se usa para reducir la dispersión en distribuciones que están sesgadas hacia la izquierda.
+
+\[
+y' = \frac{1}{\sqrt{y}}
+\]
+
+**Caso:** Si se está estudiando tiempos de respuesta en un experimento donde hay un sesgo negativo en los datos.
+
+**Ejemplo:** En un estudio de tiempos de reacción, si los tiempos están sesgados hacia valores pequeños, esta transformación puede estabilizar la varianza.
+
+### 11. **Transformación Tangente Hiperbólica (Tanh)**
+Esta transformación es útil para escalar datos que están en un rango arbitrario a un rango acotado entre -1 y 1.
+
+\[
+y' = \tanh(y)
+\]
+
+**Caso:** En redes neuronales o en análisis de series temporales, se puede aplicar para escalar los datos dentro de un rango controlado.
+
+**Ejemplo:** En modelos predictivos donde se usan redes neuronales, la transformación tangente hiperbólica puede ser útil para limitar la salida de una función de activación.
+
+
+
+
+\section{Diseño en bloques incompletos; definición y un ejemplo}
+
+
+### Diseño en bloques incompletos: Definición
+
+El **diseño en bloques incompletos** es un tipo de diseño experimental en el que los tratamientos se organizan en bloques, pero no todos los tratamientos están presentes en cada bloque. Es decir, se **"incompletan"** los bloques, en el sentido de que **cada bloque contiene solo un subconjunto de los tratamientos** disponibles.
+
+El objetivo de este tipo de diseño es reducir la variabilidad debida a diferencias sistemáticas entre los bloques, al tiempo que se minimiza la cantidad de experimentos o unidades experimentales necesarias. A diferencia de los diseños en bloques completos, donde cada bloque contiene todos los tratamientos, en los bloques incompletos se busca obtener la mayor cantidad de información posible con un número reducido de experimentos.
+
+### Características principales:
+- **Tratamientos distribuidos en bloques**: No todos los bloques contienen todos los tratamientos.
+- **Minimización de la varianza**: Se busca reducir la variabilidad dentro de los bloques, manteniendo la precisión del experimento.
+- **Equilibrio**: En los casos de diseños equilibrados, cada par de tratamientos se compara el mismo número de veces.
+
+El diseño en bloques incompletos es útil cuando no es posible probar todos los tratamientos en cada bloque debido a limitaciones de tiempo, recursos, o condiciones experimentales.
+
+### Ejemplo de diseño en bloques incompletos
+
+Supongamos que queremos probar 5 tratamientos diferentes (denotados como \( A, B, C, D, E \)) en 3 bloques. Sin embargo, cada bloque solo puede contener 3 tratamientos debido a restricciones experimentales (como espacio o recursos). La idea es que en lugar de probar todos los tratamientos en cada bloque (lo cual sería un diseño en bloques completos), probamos un subconjunto de ellos en cada bloque.
+
+#### Diseño
+
+| **Bloque** | **Tratamientos** |
+|------------|-------------------|
+| Bloque 1   | A, B, C           |
+| Bloque 2   | B, D, E           |
+| Bloque 3   | A, D, E           |
+
+- **Tratamientos totales**: \( A, B, C, D, E \) (5 tratamientos).
+- **Bloques**: \( 3 \) bloques, cada uno con \( 3 \) tratamientos.
+
+En este caso, no todos los tratamientos se aplican en cada bloque. Sin embargo, **todos los tratamientos se aplican al menos en algún bloque** y, en algunos casos, se pueden hacer comparaciones indirectas. Este diseño permite una comparación eficiente entre los tratamientos sin tener que probar cada tratamiento en cada bloque.
+
+### Ejemplo de aplicación práctica
+
+Supón que estás estudiando el efecto de 5 fertilizantes diferentes en el crecimiento de una planta en tres áreas agrícolas distintas. Sin embargo, por limitaciones de espacio en cada área, solo puedes aplicar 3 fertilizantes en cada una. Usar un diseño en bloques incompletos te permite asignar los tratamientos de manera que puedas obtener información útil sobre los efectos de cada fertilizante en esas tres áreas, sin necesidad de que cada área reciba los cinco fertilizantes.
+
+### Ventajas:
+1. **Reducción de costos**: No necesitas aplicar todos los tratamientos en cada bloque, lo que puede ser útil si hay restricciones logísticas.
+2. **Comparaciones útiles**: A pesar de que no todos los tratamientos se aplican en cada bloque, aún es posible hacer comparaciones significativas entre los tratamientos.
+3. **Control de la variabilidad**: El bloque permite controlar las fuentes de variación que no están relacionadas con los tratamientos.
+
+### Desventajas:
+1. **Análisis estadístico más complejo**: Los diseños en bloques incompletos requieren análisis estadísticos más avanzados para interpretar correctamente los resultados, como el uso de modelos mixtos o análisis de varianza (ANOVA) adaptados.
+2. **Menor información directa**: Como no todos los tratamientos se prueban en cada bloque, las comparaciones entre tratamientos no siempre son directas.
+
+### Tipos de diseño en bloques incompletos
+
+1. **Diseño de bloques incompletos balanceado (BIBD)**: Es un tipo especial de diseño en el cual cada tratamiento aparece el mismo número de veces en los bloques y cada par de tratamientos aparece juntos en el mismo número de bloques. Este tipo de diseño garantiza una comparación balanceada entre los tratamientos.
+
+2. **Diseño en bloques incompletos parcialmente balanceado (PBIBD)**: Es una variación del diseño balanceado donde algunas comparaciones entre tratamientos pueden no ser igualmente frecuentes.
+
+
+\section{REFERENCIAS}
+
+1. **Montgomery, Douglas C.** *Design and Analysis of Experiments*. Wiley, 2017. Un excelente recurso para entender transformaciones en el análisis de varianza.
+2. **Kutner, Michael H., Nachtsheim, Christopher J., Neter, John, and Li, William**. *Applied Linear Statistical Models*. McGraw-Hill, 2004. Proporciona ejemplos detallados de transformaciones en regresión y ANOVA.
+3. **Box, G. E. P., & Cox, D. R.** (1964). "An Analysis of Transformations". *Journal of the Royal Statistical Society: Series B (Methodological)*, 26(2), 211-243.
+
+
