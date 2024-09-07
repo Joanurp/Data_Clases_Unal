@@ -99,6 +99,25 @@ Los contrastes \( C_1 \) y \( C_2 \) son ortogonales porque:
 = (1)(1) + (1)(-1) + (-1)(0) + (-1)(0) = 0
 \]
 
+\section{Ejemplo en clase, tipos de mermeladas} 
+
+```{r}
+analistas <- c(3.8, 1.6, 2.7, 1.7, 2.0, 2.7, 5.2, 2.8, 1.9, 4.8, 3.6, 7.5, 6.4, 2.6, 8.1)
+marcas <- factor(rep(c("MA", "MB", "MC"), each=5)) 
+bloques <- factor(rep(c("A1", "A2", "A3", "A4", "A5"))) 
+tab <-data.frame(marcas,bloques,analistas);tab
+```
+
+
+```{r}
+ est_res = data.frame(
+Replicas = tapply(analistas, marcas, length), Promedio = tapply(analistas, marcas, mean), 
+Varianza = tapply(analistas, marcas, var), Des_Estd = tapply(analistas, marcas, sd));est_res
+
+dbca=aov(analistas~marcas+bloques, data = tab) 
+summary(dbca)
+```
+
 
 \section{Transformaciones}
 
@@ -112,7 +131,18 @@ Esta transformación se usa principalmente para estabilizar la varianza cuando l
 y' = \log(y)
 \]
 
+
 **Ejemplo:** Un análisis de regresión que modela la relación entre el ingreso de una población y su nivel educativo podría beneficiarse de una transformación logarítmica si los ingresos tienen una fuerte dispersión y no siguen una distribución normal.
+
+```{r}
+
+ingresos <- c(20000, 50000, 120000, 250000, 800000)
+
+# Aplicar la transformación logarítmica
+log_ingresos <- log(ingresos);log_ingresos
+
+```
+
 
 ### 2. **Transformación de Potencia (Box-Cox)**
 Se utiliza cuando no está claro cuál es la mejor transformación para estabilizar la varianza. Box-Cox busca encontrar una transformación óptima mediante una familia de transformaciones parametrizadas por \(\lambda\).
@@ -128,6 +158,24 @@ y' = \log(y) \quad \text{si} \quad \lambda = 0
 
 **Ejemplo:** En un estudio sobre el peso de distintos productos agrícolas, la transformación Box-Cox puede encontrar el valor de \(\lambda\) que mejor estabilice la varianza.
 
+```{r}
+library(MASS)
+
+pesos <- c(5, 10, 15, 20, 25)
+
+# Transformación Box-Cox
+boxcox_transform <- boxcox(lm(pesos ~ 1), plotit = FALSE)
+
+# Encontrar el valor óptimo de lambda
+lambda_optimo <- boxcox_transform$x[which.max(boxcox_transform$y)]
+
+# Transformación con el lambda óptimo
+pesos_transformados <- (pesos^lambda_optimo - 1) / lambda_optimo
+pesos_transformados
+
+```
+
+
 ### 3. **Transformación de Raíz Cuadrada**
 Se utiliza cuando los datos son conteos y están sesgados hacia la derecha. Es útil para transformar datos de Poisson o binomiales.
 
@@ -138,6 +186,16 @@ y' = \sqrt{y}
 \]
 
 **Ejemplo:** Un experimento que mide el número de bacterias en diferentes muestras de agua puede beneficiarse de esta transformación.
+
+```{r}
+
+conteo_bacterias <- c(10, 25, 50, 100, 200)
+
+# Aplicar la transformación de raíz cuadrada
+raiz_conteo <- sqrt(conteo_bacterias);raiz_conteo
+
+```
+
 
 ### 4. **Transformación Inversa**
 Esta se aplica cuando los datos decrecen rápidamente o tienen un comportamiento hiperbólico.
@@ -150,6 +208,15 @@ y' = \frac{1}{y}
 
 **Ejemplo:** La velocidad de una reacción química que se ralentiza con el tiempo puede analizarse mejor mediante esta transformación, para capturar mejor los patrones de desaceleración.
 
+```{r}
+
+velocidad <- c(100, 50, 25, 10, 5)
+
+# Aplicar la transformación inversa
+inversa_velocidad <- (1 / velocidad);inversa_velocidad
+
+```
+
 ### 5. **Transformación Arcseno**
 Usada cuando los datos representan proporciones o porcentajes.
 
@@ -161,7 +228,15 @@ y' = \arcsin(\sqrt{y})
 
 **Ejemplo:** En un estudio que evalúa la proporción de pacientes que responden a un tratamiento, la transformación arcseno puede ayudar a estabilizar la varianza de proporciones cercanas a 0 o 1.
 
-Sí, además de las transformaciones comunes mencionadas previamente, existen otras transformaciones útiles en diferentes contextos estadísticos. A continuación se presentan más ejemplos:
+```{r}
+
+proporciones <- c(0.1, 0.3, 0.5, 0.7, 0.9)
+
+# Aplicar la transformación arcseno
+arcseno_transform <- asin(sqrt(proporciones));arcseno_transform
+
+```
+
 
 ### 6. **Transformación Logística (Logit)**
 Usada principalmente en modelos donde la variable dependiente es binaria o representa proporciones. Se aplica para modelar la relación entre una variable dependiente categórica (0 o 1) y una o más variables independientes.
@@ -174,6 +249,16 @@ y' = \log\left(\frac{y}{1-y}\right)
 
 **Ejemplo:** En regresión logística, la variable dependiente es una probabilidad, por lo que la transformación logit se utiliza para llevar los valores de \(y\) (proporciones) a una escala continua entre \(-\infty\) y \(\infty\).
 
+```{r}
+
+proporciones <- c(0.1, 0.3, 0.5, 0.7, 0.9)
+
+# Aplicar la transformación logit
+logit_transform <- log(proporciones / (1 - proporciones));logit_transform
+
+```
+
+
 ### 7. **Transformación Exponencial**
 Útil cuando se tienen datos que crecen exponencialmente, como en estudios de crecimiento poblacional o en economía.
 
@@ -185,6 +270,17 @@ y' = e^y
 
 **Ejemplo:** Para modelar el crecimiento exponencial de una población en ecología, se podría utilizar la transformación exponencial.
 
+```{r}
+
+valores <- c(1, 2, 3, 4, 5)
+
+# Aplicar la transformación exponencial
+exponencial_transform <- exp(valores);exponencial_transform
+
+```
+
+
+
 ### 8. **Transformación de Box-Tidwell**
 Una extensión del Box-Cox, pero aplicada de forma más flexible en modelos de regresión. Se usa para encontrar transformaciones óptimas para las variables independientes, en lugar de la variable dependiente.
 
@@ -195,6 +291,19 @@ y' = X^\lambda
 \]
 
 **Ejemplo:** En un modelo de regresión múltiple, si una de las variables predictoras muestra una relación no lineal con la variable dependiente, la transformación de Box-Tidwell puede optimizar la forma de la relación.
+
+```{r}
+
+library(car)
+
+x <- c(1, 2, 3, 4, 5)
+y <- c(2, 4, 6, 8, 10)
+
+# Aplicar la transformación de Box-Tidwell
+box_tidwell <- boxTidwell(y ~ x);summary(box_tidwell)
+
+```
+
 
 ### 9. **Transformación de Johnson (Sistema de Johnson)**
 Se usa para transformar datos no normales a una distribución normal. Esta es más flexible que la transformación de Box-Cox y se utiliza para datos con diferentes grados de asimetría o curtosis.
@@ -209,6 +318,24 @@ y' = \gamma + \delta \cdot \log\left(\frac{y - \xi}{\lambda}\right)
 
 **Ejemplo:** En finanzas, si se analiza la rentabilidad de activos que no sigue una distribución normal, el sistema de Johnson puede transformar estos datos para que sean más adecuados para un análisis basado en la normalidad.
 
+```{r}
+
+
+rentabilidad <- c(0.12, 0.15, 0.09, 0.35, 0.18, 0.07, 0.22, 0.11, 0.50)
+
+# Parámetros de la transformación Johnson SU (deben ser determinados a través de análisis)
+gamma <- 0.5  # parámetro de ubicación
+delta <- 1.5  # parámetro de escala
+xi <- 0       # parámetro de traslación
+lambda <- 1   # parámetro de escala de la transformación
+
+
+johnson_transform <- gamma + delta * log((rentabilidad - xi) / lambda);johnson_transform
+
+
+```
+
+
 ### 10. **Transformación Raíz Cuadrada Inversa**
 Se usa para reducir la dispersión en distribuciones que están sesgadas hacia la izquierda.
 
@@ -219,6 +346,16 @@ y' = \frac{1}{\sqrt{y}}
 **Caso:** Si se está estudiando tiempos de respuesta en un experimento donde hay un sesgo negativo en los datos.
 
 **Ejemplo:** En un estudio de tiempos de reacción, si los tiempos están sesgados hacia valores pequeños, esta transformación puede estabilizar la varianza.
+
+```{r}
+# Datos de ejemplo
+valores <- c(1, 2, 3, 4, 5)
+
+# Aplicar la transformación raíz cuadrada inversa
+raiz_inversa_transform <- 1 / sqrt(valores);raiz_inversa_transform
+
+```
+
 
 ### 11. **Transformación Tangente Hiperbólica (Tanh)**
 Esta transformación es útil para escalar datos que están en un rango arbitrario a un rango acotado entre -1 y 1.
@@ -231,6 +368,15 @@ y' = \tanh(y)
 
 **Ejemplo:** En modelos predictivos donde se usan redes neuronales, la transformación tangente hiperbólica puede ser útil para limitar la salida de una función de activación.
 
+
+```{r}
+
+valores <- c(-1, 0, 1, 2, 3)
+
+# Aplicar la transformación Tanh
+tanh_transform <- tanh(valores);tanh_transform
+
+```
 
 
 
