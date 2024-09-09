@@ -28,6 +28,15 @@ knitr::opts_chunk$set(
 ```
 
 
+- Correcciones de las preguntas
+
+- reducir el numero de preguntas a encuestar 
+
+- centros de estudio (Nombre)
+
+- Muestreo por Conglomerados o muestreo optimo de neyman 
+
+
 ### \textcolor{blue}{Sección 1: Información General}
 
 1. **Edad**: _____ años
