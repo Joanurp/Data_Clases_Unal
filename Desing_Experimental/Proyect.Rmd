@@ -1,0 +1,119 @@
+---
+title: \textbf{Diseño de Experimentos (DCA) para el Tiempo de Vuelo de Helicopteros de Papel}
+subtitle: Universidad Nacional de Colombia Sede de La Paz
+author: "Jose Angel Urquijo, Shirleza Arías, Yuleydis Mejía"
+date: \today
+
+output:
+  pdf_document:
+    includes:
+      in_header:
+         - ../configure/Config.txt      # Configuracion de pie, encabezado y usepackge
+  
+---
+
+```{r setup, include=FALSE}
+# Configuración general
+knitr::opts_chunk$set(
+  comment = "",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  eval = TRUE,
+  echo = FALSE,
+  include = TRUE
+)
+
+```
+
+## Estadísticas Descriptivas del Diseño Experimental 
+
+
+Este estudio consiste en determinar si factores como el tipo de papel, el ancho, largo, y altura de vuelo tienen efectos sobre el tiempo de vuelo en dos zonas distintas ubicadas en el campus de La Sede de La Paz; ademas se desea observar las intereacciones dos a dos de cada factor. 
+
+
+Este diseño consta de 2 niveles con 4 factores que para cada factor se realizaron 5 replicas por cada de una de las caracteristicas establecidas para los niveles de cada factor.
+
+Diseño = $2^K \rightarrow 2^4 \quad 2x2x2x2 = 16$
+
+Como paso inicial se desarrollo un planteamiento de Hipotesis para los supuestos del modelo a intervenir con el fin de garantizar una minima varianza o la homocedasticidad y la normalidad de los residuos del modelo.
+
+Hipotesis:
+
+$H_0:$ **Los residuos de los datos del modelo para el tiempo de vuelo son Normales**
+
+$H_1:$ **Los residuos de los datos del modelo para el tiempo de vuelo No son Normales**
+
+
+## Prueba de Normalidad Y Homocedasticidad de Varianza
+
+
+```{r}
+library(readxl)
+library(readr)
+#file.choose()
+data <- read_xlsx("../Desing_Experimental/Helicopteros.xlsx")
+library(kableExtra)
+head(data)%>%kable()
+```
+
+```{r}
+library(knitr)
+library(knitr)
+library(grid)
+library(gridExtra)
+library(ggplot2)
+library(png)
+
+# Cargar imágenes
+img1 <- readPNG("../Desing_Experimental/Normalidad.png")
+img2 <- readPNG("../Desing_Experimental/Homocedasticidad.png")
+
+# Convertir a objetos grob
+grob1 <- rasterGrob(img1, interpolate=TRUE)
+grob2 <- rasterGrob(img2, interpolate=TRUE)
+
+# Crear una disposición de 1 fila y 2 columnas
+grid.arrange(grob1, grob2, nrow = 1, ncol = 2)
+
+
+```
+
+De acuerdo a las Hipotesis planteadas la variable respuesta tiempo de vuelo de los helicopteros no es normal dado que la hipotesis Nula se rechaza ya que el estadistico optenido p-value es menor que el alpha establecido para un nivel de confianza del 95\% es menor. 
+
+En el caso de la igualdad de Varianza No se cumple se cumple el supuesto de Homocedasticidad.
+
+Para el Posterior diseño de Experimentos se realizo una transformación con el que se pretendio capturar ambos supuestos sobre los residuos del modelo a intervenir.
+
+Por esta razón el tiempo de vuelo obtenido de lanzamientos en dos diferentes alturas se transformaron a través de una transformación logaritmica con la que para un nivel de confianza del 95\% pudimos capturar.
+
+
+## Normalidad Y Homocedasticidad de Varianza Para la transformacion Logaritmica
+
+
+```{r}
+
+# Cargar imágenes
+img1 <- readPNG("../Desing_Experimental/Normalidad1.png")
+img2 <- readPNG("../Desing_Experimental/Homocedasticidad1.png")
+
+# Convertir a objetos grob
+grob1 <- rasterGrob(img1, interpolate=TRUE)
+grob2 <- rasterGrob(img2, interpolate=TRUE)
+
+# Crear una disposición de 1 fila y 2 columnas
+grid.arrange(grob1, grob2, nrow = 1, ncol = 2)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
